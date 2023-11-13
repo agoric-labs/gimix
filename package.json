@@ -1,0 +1,10 @@
+{
+  "name": "gimix",
+  "version": "0.0.0",
+  "private": true,
+  "workspaces": [
+    "contract",
+    "oracle-server",
+    "web"
+  ]
+}
