@@ -1,0 +1,36 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* Refer to https://tailwindcss.com/docs/customizing-colors#using-css-variables */
+  --color-primary: 72, 72, 72;
+  --color-secondary: 163, 165, 185;
+  --color-alternative: 102, 105, 128;
+  --color-alert: 226, 41, 81;
+  --color-disabled: 193, 195, 215;
+  --color-white: 255, 255, 255;
+  
+  font-family: Inter, system-ui, Avenir, Helvetica, Arial, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+}
+
+.tooltip {
+  @apply invisible absolute;
+}
+
+.has-tooltip:hover .tooltip {
+  @apply visible z-50;
+}
+
+.Toastify__toast-container.Toastify__toast-container--bottom-right {
+  bottom: 5em;
+}
+
+.Toastify__toast-container.Toastify__toast-container--bottom-center {
+  bottom: 5em;
+}
