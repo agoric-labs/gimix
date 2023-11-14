@@ -4,7 +4,7 @@ import { Footer } from "./components/Footer";
 import { NetworkDropdown } from "./components/NetworkDropdown";
 import { WalletConnectButton } from "./components/WalletConnectButton";
 import { Tabs } from "./components/Tabs";
-import { Button } from "./components/Button";
+import { GitHubLoginButton } from "./components/GitHubLoginButton";
 // import { useNetwork } from "./hooks/useNetwork";
 // import { useWallet } from "./hooks/useWallet";
 
@@ -34,13 +34,7 @@ const App = () => {
               action: "propose",
               content: (
                 <div className="flex flex-row justify-center mb-6 mt-4 ">
-                  <Button
-                    Icon={null}
-                    text="Login with GitHub"
-                    theme="dark"
-                    layoutStyle="flex w-1/4"
-                    onClick={() => (window.location.href = "/api/login/github")}
-                  />
+                  <GitHubLoginButton />
                 </div>
               ),
             },
@@ -49,13 +43,7 @@ const App = () => {
               action: "claim",
               content: (
                 <div className="flex flex-row justify-center mb-6 mt-4 ">
-                  <Button
-                    Icon={null}
-                    text="Login with GitHub"
-                    theme="dark"
-                    layoutStyle="flex w-1/4"
-                    onClick={() => (window.location.href = "/api/login/github")}
-                  />
+                  <GitHubLoginButton />
                 </div>
               ),
             },

@@ -26,7 +26,7 @@ export const githubOAuthPlugin = fp(async function (fastify) {
       auth: oauthPlugin.GITHUB_CONFIGURATION,
     },
     startRedirectPath: REDIRECT_PATH,
-    callbackUri: CALLBACK_URI,
+    callbackUri: CALLBACK_URI, // must match what is provided to GitHub
     cookie: {
       secure: true,
       sameSite: "strict",
