@@ -1,0 +1,46 @@
+name: Lint and Test
+
+on:
+  pull_request:
+
+jobs:
+  oracle-server:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+      - name: yarn install
+        run: yarn
+      - name: yarn lint:server
+        run: yarn lint:server
+      - name: yarn test:server
+        uses: nick-fields/retry@v2
+        with:
+          timeout_minutes: 3
+          max_attempts: 3
+          retry_on: timeout
+          command: yarn test:server
+      - name: yarn build:server
+        run: yarn build:server
+
+  client:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repo
+        uses: actions/checkout@v3
+      - name: Use Node.js 18.x
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18.x'
+      - name: yarn install
+        run: yarn install
+      - name: yarn lint:web
+        run: yarn lint:web
+      - name: yarn test:web
+        run: yarn test:web
+      - name: yarn build:web
+        run: yarn build:web

@@ -6,5 +6,17 @@
     "contract",
     "oracle-server",
     "web"
-  ]
+  ],
+  "scripts": {
+    "dev:server": "yarn workspace oracle-server run dev",
+    "start:server": "yarn workspace oracle-server run start",
+    "build:server": "yarn workspace oracle-server run build",
+    "lint:server": "yarn workspace oracle-server run lint",
+    "test:server": "yarn workspace oracle-server run test",
+    "dev:web": "yarn workspace web run dev",
+    "start:web": "yarn workspace web run start",
+    "build:web": "yarn workspace web run build",
+    "lint:web": "yarn workspace web run lint",
+    "test:web": "yarn workspace web run test"
+  }
 }
