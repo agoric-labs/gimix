@@ -5,6 +5,8 @@ import { NetworkDropdown } from "./components/NetworkDropdown";
 import { WalletConnectButton } from "./components/WalletConnectButton";
 import { Tabs } from "./components/Tabs";
 import { GitHubLoginButton } from "./components/GitHubLoginButton";
+import { ProposeBountyForm } from "./components/ProposeBountyForm";
+import { ClaimBountyForm } from "./components/ClaimBountyForm";
 // import { useNetwork } from "./hooks/useNetwork";
 // import { useWallet } from "./hooks/useWallet";
 
@@ -22,6 +24,9 @@ const App = () => {
             <div className="mr-6 relative">
               <NetworkDropdown />
             </div>
+            <div className="mr-6 relative">
+              <GitHubLoginButton />
+            </div>
             <WalletConnectButton theme="white" />
           </>
         }
@@ -33,8 +38,11 @@ const App = () => {
               title: "Propose Bounty",
               action: "propose",
               content: (
-                <div className="flex flex-row justify-center mb-6 mt-4 ">
-                  <GitHubLoginButton />
+                <div className="flex flex-col mb-6 mt-4">
+                  <ProposeBountyForm
+                    title="Propose Bounty"
+                    description="Attach a bounty or reward to a GitHub Issue. When a Pull Request that marks the issue closed is approved and merged, the bounty will be released to the PR author."
+                  />
                 </div>
               ),
             },
@@ -42,8 +50,11 @@ const App = () => {
               title: "Claim Bounty",
               action: "claim",
               content: (
-                <div className="flex flex-row justify-center mb-6 mt-4 ">
-                  <GitHubLoginButton />
+                <div className="flex flex-col mb-6 mt-4">
+                  <ClaimBountyForm
+                    title="Claim Bounty"
+                    description="If you submitted a pull request that closes an issue with a bounty attached to it, use this form to claim the bounty and provide a wallet address for payment."
+                  />
                 </div>
               ),
             },

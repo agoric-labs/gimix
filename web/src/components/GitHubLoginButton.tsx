@@ -63,16 +63,14 @@ const GitHubLoginButton = () => {
         <Button
           Icon={null}
           text="Logout of GitHub"
-          theme="dark"
-          layoutStyle="flex w-1/4"
+          theme="white"
           onClick={logOut}
         />
       ) : (
         <Button
           Icon={null}
           text="Login with GitHub"
-          theme="dark"
-          layoutStyle="flex w-1/4"
+          theme="white"
           onClick={() => (window.location.href = "/api/login/github")}
         />
       )}
