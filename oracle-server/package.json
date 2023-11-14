@@ -1,0 +1,62 @@
+{
+  "name": "oracle-server",
+  "private": true,
+  "version": "0.1.0",
+  "main": "dist/server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node dist/server.js",
+    "dev": "ts-node-esm src/server.ts",
+    "build": "tsc",
+    "lint": "eslint src/**/*.ts test/**/*.ts",
+    "test": "c8 ava 'test/**/test-*.ts' --serial",
+    "test:watch": "ava 'test/**/test-*.ts' -w --serial"
+  },
+  "engines": {
+    "node": ">=18.14.x"
+  },
+  "dependencies": {
+    "@agoric/cosmic-proto": "^0.3.0",
+    "@cosmjs/stargate": "^0.31.3",
+    "@endo/init": "^0.5.57",
+    "@endo/marshal": "^0.8.8",
+    "@fastify/cookie": "^9.1.0",
+    "@fastify/oauth2": "^7.5.0",
+    "dotenv": "^16.3.1",
+    "fastify": "^4.21.0",
+    "fastify-plugin": "^4.5.1"
+  },
+  "devDependencies": {
+    "@types/node": "^20.9.0",
+    "@typescript-eslint/eslint-plugin": "^6.11.0",
+    "@typescript-eslint/parser": "^6.11.0",
+    "ava": "^5.3.1",
+    "c8": "^8.0.1",
+    "eslint": "^8.47.0",
+    "eslint-import-resolver-typescript": "^3.6.1",
+    "eslint-plugin-import": "^2.29.0",
+    "eslint-plugin-node": "^11.1.0",
+    "ts-node": "^10.9.1",
+    "typescript": "^5.2.2"
+  },
+  "ava": {
+    "extensions": {
+      "ts": "module"
+    },
+    "nodeArguments": [
+      "--loader=ts-node/esm"
+    ],
+    "files": [
+      "test/**/test-*.ts"
+    ],
+    "ignoredByWatcher": [
+      "node_modules/**",
+      "coverage/**"
+    ]
+  },
+  "c8": {
+    "include": [
+      "src/**/*.ts"
+    ]
+  }
+}
