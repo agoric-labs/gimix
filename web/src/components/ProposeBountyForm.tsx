@@ -43,8 +43,11 @@ const ProposeBountyForm = ({ title, description }: ProposeBountyFormProps) => {
                   name="issue"
                   id="issue"
                   placeholder=""
-                  className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cardinal-600 sm:max-w-sm sm:text-sm sm:leading-6"
+                  className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-emerald-600 sm:max-w-sm sm:text-sm sm:leading-6"
                 />
+                <p className="mt-3 text-xs leading-6 text-gray-600">
+                  Provide a GitHub Issue URL.
+                </p>
               </div>
             </div>
 
@@ -61,8 +64,32 @@ const ProposeBountyForm = ({ title, description }: ProposeBountyFormProps) => {
                   name="amount"
                   id="amount"
                   // placeholder="0"
-                  className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-cardinal-600 sm:max-w-sm sm:text-sm sm:leading-6"
+                  className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-emerald-600 sm:max-w-sm sm:text-sm sm:leading-6"
                 />
+                <p className="mt-3 text-xs leading-6 text-gray-600">
+                  Provide an amount you would like to award for this bounty.
+                </p>
+              </div>
+            </div>
+
+            <div className="sm:grid sm:grid-cols-4 sm:items-start sm:gap-4 sm:py-6">
+              <label
+                htmlFor="deadline"
+                className="block text-sm font-medium leading-6 text-gray-900 sm:pt-1.5"
+              >
+                Deadline
+              </label>
+              <div className="mt-2 sm:col-span-3 sm:mt-0">
+                <input
+                  type="datetime-local"
+                  name="deadline"
+                  id="deadline"
+                  // placeholder="0"
+                  className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-emerald-600 sm:max-w-sm sm:text-sm sm:leading-6"
+                />
+                <p className="mt-3 text-xs leading-6 text-gray-600">
+                  Select a date for when this bounty will expire.
+                </p>
               </div>
             </div>
           </div>

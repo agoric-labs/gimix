@@ -2,12 +2,7 @@
 
 - Accept invitation to `makeJobReportInvitation` invitationMaker
 
-- Report back on an Issue's state.
-  - Is the issue assigned, who is the assignee
-  - * Retrieve the assignee's wallet address (from a GH gist) *
-  - Send `DeliveryInvitation` to assignee's deposit facet (wallet address)
-
-- Report back on a Pull Request's state. 
+- Report back on a Pull Request's state, as it related to a specific jobId. 
   - Is it "approved"
   - Is it "merged"
   - Is it associated with issue X, and is issue X closed?
@@ -30,5 +25,5 @@
   2. PR is associated with a particular issue, does this issue have an active bounty?
   3. If yes, and the PR is approved and merged:
     1. call makeJobReportInvitation, report this good news to the contract
-    2. [release the invitation Delivery to Bob]
+      -> contract sends invitation to Bob. web-app listens for new invitations to continue the flow
 6. Bob Submits the invitation with his walletAddress, and prUrl (record keeping only?)
