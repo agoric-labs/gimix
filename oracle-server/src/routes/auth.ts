@@ -6,15 +6,20 @@ import { REDIRECT_PATH } from "../plugins/github.js";
 
 export const auth: FastifyPluginCallback = (fastify, _, done) => {
   fastify.get(`${REDIRECT_PATH}/callback`, async function (request, reply) {
-    const token =
-      await this.githubOAuth2.getAccessTokenFromAuthorizationCodeFlow(request);
+    try {
+      const token =
+        await this.githubOAuth2.getAccessTokenFromAuthorizationCodeFlow(
+          request
+        );
 
-    console.log(token);
-    console.log(token.token.access_token);
+      await saveAccessToken(token.token);
 
-    await saveAccessToken(token.token);
-
-    reply.send({ access_token: token.token.access_token });
+      reply.send({ access_token: token.token.access_token });
+    } catch (e) {
+      console.error(e);
+      reply.status(500).send(e);
+    }
+    
   });
 
   fastify.get(
