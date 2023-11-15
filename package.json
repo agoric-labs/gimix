@@ -17,6 +17,10 @@
     "start:web": "yarn workspace web run start",
     "build:web": "yarn workspace web run build",
     "lint:web": "yarn workspace web run lint",
-    "test:web": "yarn workspace web run test"
+    "test:web": "yarn workspace web run test",
+    "postinstall": "patch-package"
+  },
+  "dependencies": {
+    "patch-package": "^8.0.0"
   }
 }
