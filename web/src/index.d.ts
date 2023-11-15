@@ -1,9 +1,11 @@
 import { NetName } from "./contexts/network";
 import { Keplr } from "@keplr-wallet/types";
 
-declare module "@agoric/ui-components" {
-  export const stringifyAmountValue;
-  export const makeAgoricKeplrConnection;
+declare module "@agoric/web-components" {
+  export function makeAgoricKeplrConnection(): {
+    address: string;
+    chanId: string;
+  };
 }
 
 declare global {

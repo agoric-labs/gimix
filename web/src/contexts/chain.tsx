@@ -1,5 +1,6 @@
 import { createContext, useEffect, useState, ReactNode, useRef } from "react";
 import { AgoricChainStoragePathKind as Kind } from "@agoric/rpc";
+// @ts-expect-error missing module declaration
 import { makeAgoricKeplrConnection } from "@agoric/web-components";
 import isEqual from "lodash/isEqual";
 import { useNetwork } from "../hooks/useNetwork";
