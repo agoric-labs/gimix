@@ -52,6 +52,14 @@ export function getGraphql() {
   });
 }
 
+// octokit instance scoped to the user's PAT
+export function createUserOctokit(userAccessToken: string) {
+  return new Octokit({
+    auth: userAccessToken,
+  });
+}
+
+
 interface QueryData {
   repository: {
     pullRequest: {

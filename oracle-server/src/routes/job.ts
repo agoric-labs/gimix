@@ -1,13 +1,21 @@
 import type { FastifyPluginCallback, FastifyRequest } from "fastify";
-import { queryPullRequest } from "../lib/octokit.js";
+import { createUserOctokit, queryPullRequest } from "../lib/octokit.js";
 import { parseGitHubUrl } from "../utils/job.js";
 
-type ProposeJob = { Body: { issueUrl: string; jobId: string } };
+type ProposeJob = {
+  Body: { issueUrl: string; jobId: string };
+  Headers: {
+    authorization: string;
+  };
+};
 type ClaimJob = {
   Body: {
     prUrl: string;
     walletAddress: string;
     jobId: string;
+  };
+  Headers: {
+    authorization: string;
   };
 };
 
@@ -17,6 +25,19 @@ export const job: FastifyPluginCallback = (fastify, _, done) => {
     async function (request: FastifyRequest<ClaimJob>, reply) {
       try {
         // TODO get gh access_token from header
+        const _userAccessToken = request.headers["authorization"]; // or however you pass the token
+        if (!_userAccessToken)
+          return reply.status(401).send("GitHub access token is required.");
+        const userAccessToken = _userAccessToken.split("Bearer ")[1];
+        if (!_userAccessToken)
+          return reply.status(401).send("Unable to parse access token.");
+        
+        const userOctokit = createUserOctokit(userAccessToken);
+        if (!userOctokit) {
+          return reply
+            .status(401)
+            .send("Error validating GitHub access token.");
+        }
         const { prUrl, jobId, walletAddress } = request.body;
         const pullParams = parseGitHubUrl(prUrl, "pull");
         if (!pullParams)
@@ -24,14 +45,21 @@ export const job: FastifyPluginCallback = (fastify, _, done) => {
         const query = await queryPullRequest(pullParams);
         if (!query)
           return reply.status(400).send("Unable to fetch PR details.");
-        const prRef = query.repository.pullRequest;
-        const issueRef =
-          query.repository.pullRequest.closingIssuesReferences.nodes[0];
 
-        // 1. check user's access_token == PR author (pull.data.user.id)
-        // XXX TODO
+        const userData = await userOctokit.rest.users.getAuthenticated();
+        if (!userData)
+          return reply.status(401).send("Unable to fetch author profile data.");
+
+        const prRef = query.repository.pullRequest;
+
+        // 1. check user's access_token == PR author
+        if (userData.data.login !== prRef.author.login) {
+          return reply.status(403).send("User is not the pull request author.");
+        }
 
         // 2. Check that PR has an issue
+        const issueRef =
+          query.repository.pullRequest.closingIssuesReferences.nodes[0];
         if (!issueRef)
           return reply
             .status(400)

@@ -1,7 +1,13 @@
 import { useRef, FormEvent, ReactNode } from "react";
 import { toast } from "react-toastify";
+import { useMutation } from "@tanstack/react-query";
 import { Button } from "./Button";
 import { useWallet } from "../hooks/useWallet";
+import {
+  ClaimBountyInput,
+  ClaimBountyOutput,
+  claimBounty,
+} from "../lib/mutations";
 
 interface ClaimBountyFormProps {
   title: ReactNode;
@@ -13,13 +19,28 @@ const ClaimBountyForm = ({ title, description }: ClaimBountyFormProps) => {
   const walletInputRef = useRef<HTMLInputElement>(null);
   const { walletAddress } = useWallet();
 
+  const mutation = useMutation<ClaimBountyOutput, Error, ClaimBountyInput>({
+    mutationFn: claimBounty,
+    onSuccess: (data) => {
+      // Handle success
+      console.log("success", data);
+      toast.success("Bounty claimed successfully!");
+    },
+    onError: (error) => {
+      console.error(error);
+      toast.error(`Error: ${error.message}`);
+    },
+  });
+
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     if (!formRef.current) throw new Error("No form data");
     const formData = new FormData(formRef.current);
-    const pullRequest = (formData.get("pullRequest") as string) || "";
-    const amount = (formData.get("amount") as string) || "";
-    console.log("onSubmit", { pullRequest, amount });
+    const prUrl = (formData.get("prUrl") as string) || "";
+    const jobId = (formData.get("jobId") as string) || "";
+    const walletAddress = (formData.get("walletAddress") as string) || "";
+    console.log("onSubmit", { prUrl, jobId, walletAddress });
+    mutation.mutate({ prUrl, jobId, walletAddress });
   };
 
   const handlePopulateAddress = () => {
@@ -45,7 +66,7 @@ const ClaimBountyForm = ({ title, description }: ClaimBountyFormProps) => {
           <div className="mt-10 space-y-8 border-b border-gray-900/10 pb-12 sm:space-y-0 sm:divide-y sm:divide-gray-900/10 sm:border-t sm:pb-0">
             <div className="sm:grid sm:grid-cols-4 sm:items-start sm:gap-4 sm:py-6">
               <label
-                htmlFor="pullRequest"
+                htmlFor="prUrl"
                 className="block text-sm font-medium leading-6 text-gray-900 sm:pt-1.5"
               >
                 Pull Request Url
@@ -53,8 +74,8 @@ const ClaimBountyForm = ({ title, description }: ClaimBountyFormProps) => {
               <div className="mt-2 sm:col-span-3 sm:mt-0">
                 <input
                   type="text"
-                  name="pullRequest"
-                  id="pullRequest"
+                  name="prUrl"
+                  id="prUrl"
                   placeholder=""
                   className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-emerald-600 sm:max-w-sm sm:text-sm sm:leading-6"
                 />
@@ -109,6 +130,7 @@ const ClaimBountyForm = ({ title, description }: ClaimBountyFormProps) => {
               <div className="mt-2 sm:col-span-1 sm:mt-0 -ml-10 sm:-ml-20">
                 <button
                   className="text-xs bg-wild-sand-100 hover:bg-wild-sand-200 items-center justify-center rounded-md px-2 py-2 ml-4 my-auto mt-1"
+                  type="button"
                   onClick={handlePopulateAddress}
                 >
                   Populate with Keplr
