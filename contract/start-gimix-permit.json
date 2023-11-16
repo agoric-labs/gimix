@@ -1,0 +1,25 @@
+{
+  "consume": {
+    "agoricNames": true,
+    "board": true,
+    "chainTimerService": true,
+    "namesByAddress": true,
+    "namesByAddressAdmin": true,
+    "zoe": true
+  },
+  "instance": {
+    "produce": {
+      "GiMiX": true
+    }
+  },
+  "issuer": {
+    "produce": {
+      "GimixOracle": true
+    }
+  },
+  "brand": {
+    "produce": {
+      "GimixOracle": true
+    }
+  }
+}
