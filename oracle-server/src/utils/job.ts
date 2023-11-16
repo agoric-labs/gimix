@@ -1,8 +1,9 @@
 type GitHubResourceType = "issue" | "pull";
 
-type GitHubResourceParams<T extends GitHubResourceType> = T extends "issue"
-  ? { owner: string; repo: string; issue_number: number }
-  : { owner: string; repo: string; pull_number: number };
+export type GitHubResourceParams<T extends GitHubResourceType> =
+  T extends "issue"
+    ? { owner: string; repo: string; issue_number: number }
+    : { owner: string; repo: string; pull_number: number };
 
   export function parseGitHubUrl<T extends GitHubResourceType>(
     url: string,
