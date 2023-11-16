@@ -14,6 +14,7 @@ interface ChainContext {
     | Awaited<ReturnType<typeof makeAgoricWalletConnection>>
     | undefined;
   instance: unknown; // Alleged Instance
+  timerService: unknown; // todo Remotable
 }
 
 export const ChainContext = createContext<ChainContext>({
@@ -22,6 +23,7 @@ export const ChainContext = createContext<ChainContext>({
   purses: [],
   connection: undefined,
   instance: undefined,
+  timerService: undefined,
 });
 
 export const ChainContextProvider = ({ children }: { children: ReactNode }) => {
@@ -40,6 +42,7 @@ export const ChainContextProvider = ({ children }: { children: ReactNode }) => {
     string | undefined
   >(undefined);
   const [purses, setPurses] = useState([]);
+  const [timerService, setTimerService] = useState(undefined);
 
   useEffect(() => {
     if (
@@ -116,6 +119,7 @@ export const ChainContextProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (watcher && !instance) {
       watchPath(Kind.Data, "published.agoricNames.instance", (data) => {
+        // todo object from entries refactor
         const instance = (data as InstanceData)
           .find(([name]) => name === "GiMiX")
           ?.at(1);
@@ -152,6 +156,18 @@ export const ChainContextProvider = ({ children }: { children: ReactNode }) => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watcher, walletAddress]);
 
+  useEffect(() => {
+    if (watcher && !timerService) {
+      const { marshaller } = watcher;
+      // not reccomended!
+      const capData = { body: '#"$0.Alleged: Timer"', slots: ["board05674"] };
+      const timer = marshaller.fromCapData(capData);
+      setTimerService(timer);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watcher]);
+
+  console.log({ brands, purses });
   return (
     <ChainContext.Provider
       value={{
@@ -160,6 +176,7 @@ export const ChainContextProvider = ({ children }: { children: ReactNode }) => {
         purses,
         connection: connection.current,
         instance,
+        timerService,
       }}
     >
       {children}

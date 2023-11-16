@@ -12,6 +12,7 @@ import { useQuery } from "@tanstack/react-query";
 import { useWallet } from "../hooks/useWallet";
 import { selectIstCoins } from "../lib/selectors";
 import { renderCoins } from "../utils/coin";
+// import { TimeMath } from "@agoric/time";
 
 interface ProposeBountyFormProps {
   title: ReactNode;
@@ -20,7 +21,7 @@ interface ProposeBountyFormProps {
 
 const ProposeBountyForm = ({ title, description }: ProposeBountyFormProps) => {
   const formRef = useRef<HTMLFormElement>(null);
-  const { brands, connection, instance } = useChain();
+  const { brands, connection, instance, timerService } = useChain();
   const { api, netName } = useNetwork();
   const { walletAddress } = useWallet();
 
@@ -39,6 +40,7 @@ const ProposeBountyForm = ({ title, description }: ProposeBountyFormProps) => {
     amount: number;
     deadlineDate: string; // datestring
   }) => {
+    console.log("timerService", timerService);
     if (!brands) throw new Error("Unable to fetch brands.");
     if (!connection) throw new Error("Not connected to signer.");
     if (!instance) throw new Error("Contract instance not found.");
@@ -54,7 +56,14 @@ const ProposeBountyForm = ({ title, description }: ProposeBountyFormProps) => {
       });
       throw new Error("Deadline must be a date in the future.");
     }
-    const deadline = proposedTime / 1000;
+    // todo harden
+    const deadline = {
+      timerBrand: brands.timer,
+      absValue: BigInt(proposedTime / 1000),
+    };
+    // TODO use TimeMath
+    // TimeMath.coerceTimestampRecord(BigInt(proposedTime / 1000), brands.timer);
+    // also maybe see makeTimestampRecord
 
     const toastId = createId();
     toast.loading("Broadcasting transaction...", {
@@ -65,6 +74,7 @@ const ProposeBountyForm = ({ title, description }: ProposeBountyFormProps) => {
         source: "contract",
         instance: instance,
         publicInvitationMaker: "makeWorkAgreementInvitation",
+        invitationArgs: [issueUrl],
       },
       {
         give: {
@@ -76,7 +86,8 @@ const ProposeBountyForm = ({ title, description }: ProposeBountyFormProps) => {
             makeCopyBag([[`Fixed ${issueUrl}`, 1n]])
           ),
         },
-        exit: { afterDeadline: { deadline, timer: brands.timer } },
+
+        exit: { afterDeadline: { deadline, timer: timerService } },
       },
       undefined,
       (update: { status: string; data?: unknown }) => {
