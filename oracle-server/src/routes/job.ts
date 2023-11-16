@@ -1,15 +1,21 @@
 import type { FastifyPluginCallback, FastifyRequest } from "fastify";
-import isEqual from "lodash.isequal";
-import { getOctokit } from "../lib/octokit.js";
+import { createUserOctokit, queryPullRequest } from "../lib/octokit.js";
 import { parseGitHubUrl } from "../utils/job.js";
 
-type ProposeJob = { Body: { issueUrl: string; jobId: string } };
+type ProposeJob = {
+  Body: { issueUrl: string; jobId: string };
+  Headers: {
+    authorization: string;
+  };
+};
 type ClaimJob = {
   Body: {
     prUrl: string;
     walletAddress: string;
     jobId: string;
-    issueUrl: string;
+  };
+  Headers: {
+    authorization: string;
   };
 };
 
@@ -19,63 +25,82 @@ export const job: FastifyPluginCallback = (fastify, _, done) => {
     async function (request: FastifyRequest<ClaimJob>, reply) {
       try {
         // TODO get gh access_token from header
-        const { prUrl, issueUrl, jobId, walletAddress } = request.body;
+        const _userAccessToken = request.headers["authorization"]; // or however you pass the token
+        if (!_userAccessToken)
+          return reply.status(401).send("GitHub access token is required.");
+        const userAccessToken = _userAccessToken.split("Bearer ")[1];
+        if (!_userAccessToken)
+          return reply.status(401).send("Unable to parse access token.");
+        
+        const userOctokit = createUserOctokit(userAccessToken);
+        if (!userOctokit) {
+          return reply
+            .status(401)
+            .send("Error validating GitHub access token.");
+        }
+        const { prUrl, jobId, walletAddress } = request.body;
         const pullParams = parseGitHubUrl(prUrl, "pull");
-        const issueParams = parseGitHubUrl(issueUrl, "issue");
         if (!pullParams)
           return reply.status(400).send("Invalid pull request url.");
-        if (!issueParams) return reply.status(400).send("Invalid issue url.");
-        const pull = await getOctokit().rest.pulls.get(pullParams);
-        const issue = await getOctokit().rest.issues.get(issueParams);
-        /// XXX TODO
-        // check that jobId is associated with issueUrl
+        const query = await queryPullRequest(pullParams);
+        if (!query)
+          return reply.status(400).send("Unable to fetch PR details.");
 
-        // 1. check user's access_token == PR author (pull.data.user.id)
-        // XXX TODO
-        // 2. check that submitter was assigned the issue
-        if (!issue.data.assignee)
-          return reply.status(400).send("Issue does not have an assignee.");
-        if (issue.data.assignee.id !== pull.data.user.id)
-          return reply
-            .status(400)
-            .send("Issue was not assigned to the pull request author.");
-        // 3. check that PR is closed & merged
-        if (pull.data.state !== "closed" || !pull.data.merged) {
-          return reply
-            .status(400)
-            .send("Pull request has not been merged yet.");
+        const userData = await userOctokit.rest.users.getAuthenticated();
+        if (!userData)
+          return reply.status(401).send("Unable to fetch author profile data.");
+
+        const prRef = query.repository.pullRequest;
+
+        // 1. check user's access_token == PR author
+        if (userData.data.login !== prRef.author.login) {
+          return reply.status(403).send("User is not the pull request author.");
         }
-        // 4. check that PR closes provided issue
-        // XXX pull.data.issue_url == pull.url. this is not a reliable way to do this.
-        // instead, we need to check for github pull request comments and commit
-        // if (!pull.data.issue_url)
-        //   return reply
-        //     .status(400)
-        //     .send("Associated issue was not found for this pull request.");
 
-        // const pullIssueParams = parseGitHubUrl(pull.data.issue_url, "issue");
-        // if (!isEqual(pullIssueParams, issueParams)) {
-        //   return reply
-        //     .status(400)
-        //     .send(
-        //       "Supplied issue does not match the issue associated with the pull request."
-        //     );
-        // }
+        // 2. Check that PR has an issue
+        const issueRef =
+          query.repository.pullRequest.closingIssuesReferences.nodes[0];
+        if (!issueRef)
+          return reply
+            .status(400)
+            .send("Issue reference not found for this pull request.");
+
+        // 3. check that submitter was assigned the issue
+        const assigneeRef = issueRef.assignees.nodes[0];
+        if (!assigneeRef)
+          return reply.status(400).send("Issue does not have an assignee.");
+        if (assigneeRef.resourcePath.replace("/", "") !== prRef.author.login) {
+          return reply
+            .status(400)
+            .send("Issue is not assigned to the pull request author.");
+        }
+
+        // 4. check that PR is closed & merged
+        if (prRef.state !== "MERGED" || !prRef.merged) {
+          return reply.status(400).send("Pull request is not merged.");
+        }
+
         // 5. check the issue is closed and marked completed
         if (
-          issue.data.state !== "closed" &&
-          issue.data.state_reason !== "completed"
+          issueRef.state !== "CLOSED" &&
+          issueRef.stateReason !== "COMPLETED"
         ) {
           return reply
             .status(400)
             .send("Issue is still open or not marked completed.");
         }
 
+        // 6. ensure the issue has a bounty
+        // 6.1 check that jobId is associated with issueUrl
+        /// XXX TODO, need to query blockchain state
+        const _issueUrl = issueRef.url;
+        const _issueNumber = issueRef.number;
+
         // XXX TODO sendJobReport, all criteria met
         // sendJobReport
         const _w = walletAddress;
 
-        reply.send({ ok: true, data: pull.data, jobId });
+        reply.send({ ok: true, jobId });
       } catch (e) {
         console.error("/job/claim error", e);
         reply.status(500).send("Unexpected error.");

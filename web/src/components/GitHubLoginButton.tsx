@@ -6,7 +6,7 @@ import { toast } from "react-toastify";
 import { createId } from "@paralleldrive/cuid2";
 import { Button } from "./Button";
 
-const LOCAl_STORAGE_KEY = "githubAccessToken";
+export const LOCAl_STORAGE_KEY = "githubAccessToken";
 const loginSuccessToastId = createId();
 
 const GitHubLoginButton = () => {
