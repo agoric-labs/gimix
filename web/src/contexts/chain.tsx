@@ -1,22 +1,27 @@
 import { createContext, useEffect, useState, ReactNode, useRef } from "react";
 import { AgoricChainStoragePathKind as Kind } from "@agoric/rpc";
-// @ts-expect-error missing module declaration
-import { makeAgoricKeplrConnection } from "@agoric/web-components";
+import { makeAgoricWalletConnection } from "@agoric/web-components";
 import isEqual from "lodash/isEqual";
 import { useNetwork } from "../hooks/useNetwork";
 import { useWallet } from "../hooks/useWallet";
-import { WalletData } from "../types/ertp";
+import { BrandData, InstanceData, WalletData } from "../types/agoric";
 
 interface ChainContext {
-  brands: Array<unknown>;
+  assets: Array<unknown>;
+  brands: Record<string, unknown> | undefined;
   purses: Array<unknown>;
-  connection: ReturnType<typeof makeAgoricKeplrConnection> | undefined;
+  connection:
+    | Awaited<ReturnType<typeof makeAgoricWalletConnection>>
+    | undefined;
+  instance: unknown; // Alleged Instance
 }
 
 export const ChainContext = createContext<ChainContext>({
-  brands: [],
+  assets: [],
+  brands: undefined,
   purses: [],
   connection: undefined,
+  instance: undefined,
 });
 
 export const ChainContextProvider = ({ children }: { children: ReactNode }) => {
@@ -26,13 +31,15 @@ export const ChainContextProvider = ({ children }: { children: ReactNode }) => {
   const [currChainName, setCurrChainName] = useState<string | undefined>(
     undefined
   );
-  const [brands, setBrands] = useState([]);
+  const [instance, setInstance] = useState<unknown>(undefined);
+  const [assets, setAssets] = useState<ChainContext["assets"]>([]);
+  const [brands, setBrands] = useState<ChainContext["brands"]>(undefined);
   const { walletAddress } = useWallet();
-  const connection = useRef<unknown | undefined>(undefined);
+  const connection = useRef<ChainContext["connection"]>(undefined);
   const [currWalletAddress, setCurrWalletAddress] = useState<
     string | undefined
   >(undefined);
-  const [purses, _setPurses] = useState([]);
+  const [purses, setPurses] = useState([]);
 
   useEffect(() => {
     if (
@@ -40,14 +47,21 @@ export const ChainContextProvider = ({ children }: { children: ReactNode }) => {
       currChainName !== networkConfig?.chainName
     ) {
       setCurrChainName(networkConfig.chainName);
-      setBrands([]);
+      setBrands(undefined);
+      setAssets([]);
+      setInstance(undefined);
+      setPurses([]);
       setCurrWalletAddress(undefined);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [networkConfig]);
 
   const setWalletConnection = async () => {
-    connection.current = await makeAgoricKeplrConnection(watcher);
+    try {
+      connection.current = await makeAgoricWalletConnection(watcher);
+    } catch (e) {
+      console.error("makeAgoricKeplrConnection", e);
+    }
   };
 
   useEffect(() => {
@@ -74,17 +88,42 @@ export const ChainContextProvider = ({ children }: { children: ReactNode }) => {
   };
 
   useEffect(() => {
-    if (watcher && !brands.length) {
-      watchPath(Kind.Data, "published.agoricNames.vbankAsset", (data) => {
-        console.log("vbankAsset data", data);
-        // @ts-expect-error unknown
-        const formatted = data.map(([_, d]) => d);
+    if (watcher && !brands) {
+      watchPath(Kind.Data, "published.agoricNames.brand", (data) => {
+        const formatted = (data as BrandData).reduce(
+          (acc, [name, instance]) => ({ ...acc, [name]: instance }),
+          {}
+        );
         if (isEqual(formatted, brands)) return;
         setBrands(formatted);
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watcher, brands]);
+
+  useEffect(() => {
+    if (watcher && !assets.length) {
+      watchPath(Kind.Data, "published.agoricNames.vbankAsset", (data) => {
+        // @ts-expect-error unknown
+        const formatted = data.map(([_, d]) => d);
+        if (isEqual(formatted, assets)) return;
+        setAssets(formatted);
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watcher, assets]);
+
+  useEffect(() => {
+    if (watcher && !instance) {
+      watchPath(Kind.Data, "published.agoricNames.instance", (data) => {
+        const instance = (data as InstanceData)
+          .find(([name]) => name === "GiMiX")
+          ?.at(1);
+        setInstance(instance);
+      });
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watcher, instance]);
 
   useEffect(() => {
     if (watcher && walletAddress && walletAddress !== currWalletAddress) {
@@ -96,8 +135,19 @@ export const ChainContextProvider = ({ children }: { children: ReactNode }) => {
           const walletData = data as WalletData;
           // const { offerToPublicSubscriberPaths } = data;
           console.log("wallet.current data", walletData);
+          // TODO add purses to state
         }
       );
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [watcher, walletAddress]);
+
+  useEffect(() => {
+    if (watcher && walletAddress && walletAddress !== currWalletAddress) {
+      watchPath(Kind.Data, `mailbox.${walletAddress}`, (data) => {
+        // TODO not working 🤔. expecting to see '{"ack":1,"outbox":[]}'
+        console.log("mailbox data", data);
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watcher, walletAddress]);
@@ -105,9 +155,11 @@ export const ChainContextProvider = ({ children }: { children: ReactNode }) => {
   return (
     <ChainContext.Provider
       value={{
+        assets,
         brands,
         purses,
-        connection,
+        connection: connection.current,
+        instance,
       }}
     >
       {children}

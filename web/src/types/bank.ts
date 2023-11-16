@@ -6,6 +6,9 @@ export type Coin = {
 export type BankBalances = Coin[];
 
 export type BankBalanceResponse = {
-  height: string;
-  result: BankBalances;
+  pagination: {
+    next_key: string | undefined;
+    total: string;
+  };
+  balances: BankBalances;
 };

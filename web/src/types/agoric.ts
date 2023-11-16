@@ -11,3 +11,7 @@ export type WalletData = {
   offerToPublicSubscriberPaths: unknown[];
   offerToUsedInvitation: unknown[];
 };
+
+export type InstanceData = [string, unknown][];
+
+export type BrandData = [string, unknown][];

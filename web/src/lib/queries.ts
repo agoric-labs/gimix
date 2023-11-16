@@ -9,7 +9,7 @@ export const accountBalancesQuery = (
   queryFn: async (): Promise<BankBalances> => {
     const res = await fetch(`${api}/cosmos/bank/v1beta1/balances/${address}`);
     const data: BankBalanceResponse = await res.json();
-    return data?.result;
+    return data?.balances;
   },
   enabled: !!api && !!address,
 });
