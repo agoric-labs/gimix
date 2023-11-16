@@ -22,11 +22,16 @@
     "@endo/marshal": "^0.8.8",
     "@fastify/cookie": "^9.1.0",
     "@fastify/oauth2": "^7.5.0",
+    "@octokit/auth-app": "^6.0.1",
+    "agoric": "^0.21.2-u12.0",
     "dotenv": "^16.3.1",
     "fastify": "^4.21.0",
-    "fastify-plugin": "^4.5.1"
+    "fastify-plugin": "^4.5.1",
+    "lodash.isequal": "^4.5.0",
+    "octokit": "^3.1.2"
   },
   "devDependencies": {
+    "@types/lodash.isequal": "^4.5.8",
     "@types/node": "^20.9.0",
     "@typescript-eslint/eslint-plugin": "^6.11.0",
     "@typescript-eslint/parser": "^6.11.0",
