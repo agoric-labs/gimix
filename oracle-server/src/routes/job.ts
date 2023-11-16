@@ -46,19 +46,21 @@ export const job: FastifyPluginCallback = (fastify, _, done) => {
             .send("Pull request has not been merged yet.");
         }
         // 4. check that PR closes provided issue
-        if (!pull.data.issue_url)
-          return reply
-            .status(400)
-            .send("Associated issue was not found for this pull request.");
+        // XXX pull.data.issue_url == pull.url. this is not a reliable way to do this.
+        // instead, we need to check for github pull request comments and commit
+        // if (!pull.data.issue_url)
+        //   return reply
+        //     .status(400)
+        //     .send("Associated issue was not found for this pull request.");
 
-        const pullIssueParams = parseGitHubUrl(pull.data.issue_url, "issue");
-        if (!isEqual(pullIssueParams, issueParams)) {
-          return reply
-            .status(400)
-            .send(
-              "Supplied issue does not match the issue associated with the pull request."
-            );
-        }
+        // const pullIssueParams = parseGitHubUrl(pull.data.issue_url, "issue");
+        // if (!isEqual(pullIssueParams, issueParams)) {
+        //   return reply
+        //     .status(400)
+        //     .send(
+        //       "Supplied issue does not match the issue associated with the pull request."
+        //     );
+        // }
         // 5. check the issue is closed and marked completed
         if (
           issue.data.state !== "closed" &&
