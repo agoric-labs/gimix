@@ -8,7 +8,10 @@ declare module "fastify" {
 
 export interface ProcessEnv {
   PORT: string;
+  GITHUB_APP_ID: string;
+  GITHUB_CALLBACK_URI: string;
   GITHUB_CLIENT_ID: string;
   GITHUB_CLIENT_SECRET: string;
-  GITHUB_CALLBACK_URI: string;
+  GITHUB_INSTALLATION_ID: string;
+  GITHUB_PEM_PATH: string;
 }

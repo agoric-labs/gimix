@@ -7,13 +7,8 @@ import { Tabs } from "./components/Tabs";
 import { GitHubLoginButton } from "./components/GitHubLoginButton";
 import { ProposeBountyForm } from "./components/ProposeBountyForm";
 import { ClaimBountyForm } from "./components/ClaimBountyForm";
-// import { useNetwork } from "./hooks/useNetwork";
-// import { useWallet } from "./hooks/useWallet";
 
 const App = () => {
-  // const { netName } = useNetwork();
-  // const { walletAddress, stargateClient } = useWallet();
-
   return (
     <div className="flex flex-col min-h-screen">
       <Nav

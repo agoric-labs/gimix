@@ -1,5 +1,18 @@
-import { useRef, FormEvent, ReactNode } from "react";
+import { useRef, FormEvent, ReactNode, useMemo } from "react";
+import { makeCopyBag } from "@endo/patterns";
+import { AmountMath } from "@agoric/ertp";
+import { createId } from "@paralleldrive/cuid2";
+import { toast } from "react-toastify";
+import { useChain } from "../hooks/useChain";
 import { Button } from "./Button";
+import { TxToastMessage } from "./TxToastMessage";
+import { useNetwork, NetName } from "../hooks/useNetwork";
+import { accountBalancesQuery } from "../lib/queries";
+import { useQuery } from "@tanstack/react-query";
+import { useWallet } from "../hooks/useWallet";
+import { selectIstCoins } from "../lib/selectors";
+import { renderCoins } from "../utils/coin";
+// import { TimeMath } from "@agoric/time";
 
 interface ProposeBountyFormProps {
   title: ReactNode;
@@ -8,6 +21,118 @@ interface ProposeBountyFormProps {
 
 const ProposeBountyForm = ({ title, description }: ProposeBountyFormProps) => {
   const formRef = useRef<HTMLFormElement>(null);
+  const { brands, connection, instance, timerService } = useChain();
+  const { api, netName } = useNetwork();
+  const { walletAddress } = useWallet();
+
+  const accountBalances = useQuery(accountBalancesQuery(api, walletAddress));
+  const istCoins = useMemo(
+    () => selectIstCoins(accountBalances),
+    [accountBalances]
+  );
+
+  const makeProposal = ({
+    issueUrl,
+    amount,
+    deadlineDate,
+  }: {
+    issueUrl: string;
+    amount: number;
+    deadlineDate: string; // datestring
+  }) => {
+    console.log("timerService", timerService);
+    if (!brands) throw new Error("Unable to fetch brands.");
+    if (!connection) throw new Error("Not connected to signer.");
+    if (!instance) throw new Error("Contract instance not found.");
+    const adjAmount = BigInt(amount) * 10n ** 6n;
+    if (adjAmount <= 0n) {
+      toast.error("Offer amount must be greater than 0", { autoClose: 3000 });
+      throw new Error("Offer amount must be greater than 0");
+    }
+    const proposedTime = new Date(deadlineDate).getTime();
+    if (new Date().getTime() > proposedTime) {
+      toast.error("Deadline must be a date in the future.", {
+        autoClose: 3000,
+      });
+      throw new Error("Deadline must be a date in the future.");
+    }
+    // todo harden
+    const deadline = {
+      timerBrand: brands.timer,
+      absValue: BigInt(proposedTime / 1000),
+    };
+    // TODO use TimeMath
+    // TimeMath.coerceTimestampRecord(BigInt(proposedTime / 1000), brands.timer);
+    // also maybe see makeTimestampRecord
+
+    const toastId = createId();
+    toast.loading("Broadcasting transaction...", {
+      toastId,
+    });
+    connection.makeOffer(
+      {
+        source: "contract",
+        instance: instance,
+        publicInvitationMaker: "makeWorkAgreementInvitation",
+        invitationArgs: [issueUrl],
+      },
+      {
+        give: {
+          Acceptance: AmountMath.make(brands.IST, adjAmount),
+        },
+        want: {
+          Stamp: AmountMath.make(
+            brands.GimixOracle,
+            makeCopyBag([[`Fixed ${issueUrl}`, 1n]])
+          ),
+        },
+
+        exit: { afterDeadline: { deadline, timer: timerService } },
+      },
+      undefined,
+      (update: { status: string; data?: unknown }) => {
+        console.info("offer update", update.status, update.data);
+        if (update.status === "seated") {
+          // @ts-expect-error any
+          const { offerId, txn } = update.data;
+          if (txn.code === 0) {
+            toast.update(toastId, {
+              render: ({ closeToast }) => (
+                <TxToastMessage
+                  transactionHash={txn.transactionHash}
+                  offerId={offerId}
+                  netName={netName as NetName}
+                  closeToast={closeToast as () => void}
+                />
+              ),
+              type: "success",
+              isLoading: false,
+            });
+            formRef.current?.reset();
+            accountBalances.refetch();
+          }
+        }
+
+        if (update.status === "error") {
+          console.error(update);
+          let message =
+            "Error submitting transaction. See developer console for details.";
+          // @ts-expect-error any
+          if (update?.data?.message === "Request rejected") {
+            message = "Transaction cancelled.";
+          }
+          toast.update(toastId, {
+            render: message,
+            type: "error",
+            isLoading: false,
+            autoClose: 10000,
+          });
+        }
+        // if (update.status === "accepted") {}
+        // if (update.status === "refunded") {}
+      }
+    );
+  };
 
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -15,7 +140,12 @@ const ProposeBountyForm = ({ title, description }: ProposeBountyFormProps) => {
     const formData = new FormData(formRef.current);
     const issue = (formData.get("issue") as string) || "";
     const amount = (formData.get("amount") as string) || "";
-    console.log("onSubmit", { issue, amount });
+    const deadline = (formData.get("deadline") as string) || "";
+    makeProposal({
+      issueUrl: issue,
+      amount: Number(amount),
+      deadlineDate: deadline,
+    });
   };
 
   return (
@@ -43,7 +173,7 @@ const ProposeBountyForm = ({ title, description }: ProposeBountyFormProps) => {
                   name="issue"
                   id="issue"
                   placeholder=""
-                  className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-emerald-600 sm:max-w-sm sm:text-sm sm:leading-6"
+                  className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-emerald-600 sm:max-w-lg sm:text-sm sm:leading-6"
                 />
                 <p className="mt-3 text-xs leading-6 text-gray-600">
                   Provide a GitHub Issue URL.
@@ -63,11 +193,20 @@ const ProposeBountyForm = ({ title, description }: ProposeBountyFormProps) => {
                   type="number"
                   name="amount"
                   id="amount"
+                  min="1"
                   // placeholder="0"
-                  className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-emerald-600 sm:max-w-sm sm:text-sm sm:leading-6"
+                  className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-emerald-600 sm:max-w-xs sm:text-sm sm:leading-6"
                 />
                 <p className="mt-3 text-xs leading-6 text-gray-600">
                   Provide an amount you would like to award for this bounty.
+                </p>
+                <p className="mt-1 text-xs leading-6 text-gray-600">
+                  <span>
+                    Current balance:{" "}
+                    <span className="font-semibold">
+                      {istCoins ? renderCoins(istCoins) : "Unavailable"}
+                    </span>
+                  </span>
                 </p>
               </div>
             </div>
@@ -85,7 +224,7 @@ const ProposeBountyForm = ({ title, description }: ProposeBountyFormProps) => {
                   name="deadline"
                   id="deadline"
                   // placeholder="0"
-                  className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-emerald-600 sm:max-w-sm sm:text-sm sm:leading-6"
+                  className="block w-full rounded-md border-0 py-1.5 text-gray-900 shadow-sm ring-1 ring-inset ring-gray-300 placeholder:text-gray-400 focus:ring-2 focus:ring-inset focus:ring-emerald-600 sm:max-w-xs sm:text-sm sm:leading-6"
                 />
                 <p className="mt-3 text-xs leading-6 text-gray-600">
                   Select a date for when this bounty will expire.

@@ -5,6 +5,7 @@ import type { FastifyServerOptions } from "fastify";
 import { githubOAuthPlugin } from "./plugins/github.js";
 import { health } from "./routes/health.js";
 import { auth } from "./routes/auth.js";
+import { job } from "./routes/job.js";
 
 dotenv.config();
 
@@ -15,6 +16,7 @@ export const makeApp = (opts: FastifyServerOptions = {}) => {
 
   app.register(health);
   app.register(auth);
+  app.register(job);
 
   return app;
 };
