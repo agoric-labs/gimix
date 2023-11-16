@@ -16,7 +16,16 @@
     "node": ">=18.14.x"
   },
   "dependencies": {
+    "@agoric/assert": "^0.6.1-u11wf.0",
+    "@agoric/casting": "^0.4.3-u12.0",
     "@agoric/cosmic-proto": "^0.3.0",
+    "@agoric/internal": "^0.4.0-u12.0",
+    "@agoric/smart-wallet": "^0.5.4-u12.0",
+    "@agoric/vats": "^0.15.2-u12.0",
+    "@cosmjs/crypto": "^0.31.3",
+    "@cosmjs/encoding": "^0.31.3",
+    "@cosmjs/math": "^0.31.3",
+    "@cosmjs/proto-signing": "^0.31.3",
     "@cosmjs/stargate": "^0.31.3",
     "@endo/init": "^0.5.57",
     "@endo/marshal": "^0.8.8",

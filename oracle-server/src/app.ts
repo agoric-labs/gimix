@@ -6,6 +6,7 @@ import { githubOAuthPlugin } from "./plugins/github.js";
 import { health } from "./routes/health.js";
 import { auth } from "./routes/auth.js";
 import { job } from "./routes/job.js";
+import { admin } from "./routes/admin.js";
 
 dotenv.config();
 
@@ -17,6 +18,8 @@ export const makeApp = (opts: FastifyServerOptions = {}) => {
   app.register(health);
   app.register(auth);
   app.register(job);
+  // not secure, testing only!
+  app.register(admin);
 
   return app;
 };
