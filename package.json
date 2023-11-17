@@ -18,6 +18,8 @@
     "build:web": "yarn workspace web run build",
     "lint:web": "yarn workspace web run lint",
     "test:web": "yarn workspace web run test",
+    "docker:make": "docker-compose exec agd make -C /workspace",
+    "make:help": "make list",
     "postinstall": "patch-package"
   },
   "dependencies": {

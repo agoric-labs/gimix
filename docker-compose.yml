@@ -1,0 +1,22 @@
+version: '3.5'
+
+services:
+  agd:
+    # image should include proposals from the main agoric-3 chain
+    # cf. https://github.com/Agoric/agoric-3-proposals
+    image: ghcr.io/agoric/agoric-3-proposals:main
+    # multi-arch is not yet available
+    platform: linux/amd64
+    ports:
+      # GRPC port (?)
+      - 26656:26656
+      # RPC port
+      - 26657:26657
+      # LCD/API port
+      - 1317:1317
+    environment:
+      # Include console.log() from vats in node logs
+      DEBUG: "SwingSet:ls,SwingSet:vat"
+    volumes:
+      - .:/workspace
+    entrypoint: /usr/src/upgrade-test-scripts/start_agd.sh
