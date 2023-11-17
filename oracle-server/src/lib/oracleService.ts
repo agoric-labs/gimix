@@ -21,6 +21,7 @@ export type OracleService = {
   walletConnection: Awaited<ReturnType<typeof makeAgoricWalletConnection>>;
   watcher: ChainStorageWatcher;
   acceptOracleOffer: () => Promise<void>;
+  sendJobReport: (issueUrl: string, jobId: bigint) => Promise<void>;
 };
 
 let watcher: ChainStorageWatcher;
@@ -77,11 +78,38 @@ export const makeOracleService = async () => {
     );
   };
 
+  const sendJobReport = async (_issueUrl: string, _jobId: bigint) => {
+    const instance = state.get("instance");
+    console.log("instance", instance);
+    if (!instance) throw new Error("cannot find contract instance");
+    return walletConnection?.makeOffer(
+      {
+        // source: "purse",
+        instance: instance,
+        // description: "gimix oracle invitation",
+      },
+      {},
+      undefined,
+      (update: { status: string; data?: unknown }) => {
+        if (update.status === "error") {
+          console.log(`Offer error: ${update.data}`);
+        }
+        if (update.status === "accepted") {
+          console.log("Offer accepted");
+        }
+        if (update.status === "refunded") {
+          console.log("Offer rejected");
+        }
+      }
+    );
+  };
+
   oracleService = {
     state,
     walletConnection,
     watcher,
     acceptOracleOffer,
+    sendJobReport,
   };
 
   return oracleService;
