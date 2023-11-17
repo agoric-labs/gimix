@@ -1,19 +1,13 @@
 import type { FastifyPluginCallback } from "fastify";
-import { makeAgoricSigner, acceptOracleInvitation } from "../lib/stargate.js";
-import { getEnvVar } from "../utils/getEnvVar.js";
-// @ts-expect-error no types
-import { getNetworkConfig } from "../lib/agoric-cli-rpc.js";
+import {
+  acceptOracleInvitation,
+  makeOracleSigningClient,
+} from "../lib/stargate.js";
 
 export const admin: FastifyPluginCallback = (fastify, _, done) => {
   fastify.get("/admin/accept", async (_, reply) => {
-    // TODO: add auth / password
-    const networkConfig = await getNetworkConfig(process.env);
-    const rpcUrl = networkConfig.rpcAddrs[0];
-    const mnemonic = getEnvVar("WALLET_MNEMONIC");
-    const { address, signingClient } = await makeAgoricSigner({
-      mnemonic,
-      rpcUrl,
-    });
+    // TODO: add auth / password protect the route
+    const { signingClient, address } = await makeOracleSigningClient();
     console.log("address", address);
     let tx;
     try {

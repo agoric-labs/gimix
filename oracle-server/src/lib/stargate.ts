@@ -1,19 +1,13 @@
 /* global harden */
-// import {
-//   iterateEach,
-//   makeFollower,
-//   makeLeaderFromRpcAddresses,
-//   makeCastingSpec,
-// } from "@agoric/casting";
 import { DirectSecp256k1HdWallet, Registry } from "@cosmjs/proto-signing";
 import { SigningStargateClient, defaultRegistryTypes } from "@cosmjs/stargate";
-import { stringToPath } from "@cosmjs/crypto";
-import { Decimal } from "@cosmjs/math";
 import { MsgWalletSpendAction } from "@agoric/cosmic-proto/swingset/msgs.js";
 import { fromBech32, toBase64 } from "@cosmjs/encoding";
 import { makeClientMarshaller } from "./marshal.js";
 // @ts-expect-error no types
-import { makeRpcUtils } from "./agoric-cli-rpc.js";
+import { makeRpcUtils, getNetworkConfig } from "./agoric-cli-rpc.js";
+import { getEnvVar } from "../utils/getEnvVar.js";
+import { Agoric, hdPath } from "./chainInfo.js";
 
 const toAccAddress = (address: string) => {
   return fromBech32(address).data;
@@ -24,27 +18,10 @@ type MakeAgoricSignerArgs = {
   rpcUrl: string;
 };
 
-const Agoric = {
-  Bech32MainPrefix: "agoric",
-  CoinType: 564,
-  proto: {
-    swingset: {
-      MsgWalletSpendAction: {
-        typeUrl: "/agoric.swingset.MsgWalletSpendAction",
-      },
-    },
-  },
-  fee: { amount: [], gas: "50000000" }, // arbitrary fee...
-  gasPrice: { denom: "uist", amount: Decimal.fromUserInput("50000000", 0) },
-};
-
 export const makeAgoricSigner = async ({
   mnemonic,
   rpcUrl,
 }: MakeAgoricSignerArgs) => {
-  const hdPath = (coinType = 118, account = 0) =>
-    stringToPath(`m/44'/${coinType}'/${account}'/0/0`);
-
   const wallet = await DirectSecp256k1HdWallet.fromMnemonic(mnemonic, {
     prefix: Agoric.Bech32MainPrefix,
     hdPaths: [hdPath(Agoric.CoinType, 0), hdPath(Agoric.CoinType, 1)],
@@ -139,4 +116,14 @@ export const acceptOracleInvitation = async ({
     console.error(e);
     throw new Error("Error signing and broadcasting message.");
   }
+};
+
+export const makeOracleSigningClient = async () => {
+  const networkConfig = await getNetworkConfig(process.env);
+  const rpcUrl = networkConfig.rpcAddrs[0];
+  const mnemonic = getEnvVar("WALLET_MNEMONIC");
+  return makeAgoricSigner({
+    mnemonic,
+    rpcUrl,
+  });
 };
