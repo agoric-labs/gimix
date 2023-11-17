@@ -4,7 +4,13 @@ import { makeAgoricWalletConnection } from "@agoric/web-components";
 import isEqual from "lodash/isEqual";
 import { useNetwork } from "../hooks/useNetwork";
 import { useWallet } from "../hooks/useWallet";
-import { BrandData, InstanceData, WalletData } from "../types/agoric";
+import {
+  BrandData,
+  InstanceData,
+  CurrentWalletData,
+  WalletData,
+} from "../types/agoric";
+import { toast } from "react-toastify";
 
 interface ChainContext {
   assets: Array<unknown>;
@@ -43,6 +49,12 @@ export const ChainContextProvider = ({ children }: { children: ReactNode }) => {
   >(undefined);
   const [purses, setPurses] = useState([]);
   const [timerService, setTimerService] = useState(undefined);
+  const [walletData, setWalletData] = useState<WalletData | undefined>(
+    undefined
+  );
+  const [currentWalletData, setCurrentWalletData] = useState<
+    CurrentWalletData | undefined
+  >(undefined);
 
   useEffect(() => {
     if (
@@ -120,6 +132,7 @@ export const ChainContextProvider = ({ children }: { children: ReactNode }) => {
     if (watcher && !instance) {
       watchPath(Kind.Data, "published.agoricNames.instance", (data) => {
         // todo object from entries refactor
+        console.log("instance data", data);
         const instance = (data as InstanceData)
           .find(([name]) => name === "GiMiX")
           ?.at(1);
@@ -136,15 +149,28 @@ export const ChainContextProvider = ({ children }: { children: ReactNode }) => {
         Kind.Data,
         `published.wallet.${walletAddress}.current`,
         (data) => {
-          const walletData = data as WalletData;
+          const walletData = data as CurrentWalletData;
+          setCurrentWalletData(walletData);
           // const { offerToPublicSubscriberPaths } = data;
-          console.log("wallet.current data", walletData);
-          // TODO add purses to state
+          console.log("published.wallet.current data", walletData);
+          // TODO add purses to state we are interested in
         }
       );
+      watchPath(Kind.Data, `published.wallet.${walletAddress}`, (data) => {
+        const walletData = data as WalletData;
+        setWalletData(walletData);
+        console.log("published.wallet data", data);
+        // TODO this should only fire after a user submits an offer; not when they arrive at the page.
+        if (
+          walletData?.status?.invitationSpec?.publicInvitationMaker ===
+          "makeWorkAgreementInvitation"
+        )
+          toast.success(`Job ID: ${walletData?.status?.result}`);
+        // TODO add purses to state
+      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [watcher, walletAddress]);
+  }, [watcher, walletAddress, currWalletAddress]);
 
   useEffect(() => {
     if (watcher && walletAddress && walletAddress !== currWalletAddress) {
@@ -166,7 +192,8 @@ export const ChainContextProvider = ({ children }: { children: ReactNode }) => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watcher]);
-
+  console.log("currentWalletData", currentWalletData);
+  console.log("walletData", walletData);
   console.log({ brands, purses });
   return (
     <ChainContext.Provider
