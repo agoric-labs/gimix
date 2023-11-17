@@ -1,3 +1,4 @@
+/* global harden */
 /* eslint-disable no-use-before-define */
 import { makeClientMarshaller } from "./marshal.js";
 import { AgoricChainStoragePathKind } from "./types.js";
@@ -68,7 +69,7 @@ export const makeAgoricChainStorageWatcher = (
   const watchedPathsToSubscribers = new Map<string, Set<Subscriber<unknown>>>();
   let isNewPathWatched = false;
   let isQueryInProgress = false;
-  let nextQueryTimeout: number | null = null;
+  let nextQueryTimeout: NodeJS.Timeout | null = null;
 
   const queueNextQuery = () => {
     if (isQueryInProgress || !watchedPathsToSubscribers.size) {
@@ -78,12 +79,12 @@ export const makeAgoricChainStorageWatcher = (
     if (isNewPathWatched) {
       // If there is any new path to watch, schedule another query very soon.
       if (nextQueryTimeout) {
-        window.clearTimeout(nextQueryTimeout);
+        clearTimeout(nextQueryTimeout);
       }
-      nextQueryTimeout = window.setTimeout(queryUpdates, newPathQueryDelayMs);
+      nextQueryTimeout = setTimeout(queryUpdates, newPathQueryDelayMs);
     } else {
       // Otherwise, refresh after a normal interval.
-      nextQueryTimeout = window.setTimeout(
+      nextQueryTimeout = setTimeout(
         queryUpdates,
         randomRefreshPeriod(refreshLowerBoundMs, refreshUpperBoundMs)
       );
@@ -116,6 +117,7 @@ export const makeAgoricChainStorageWatcher = (
         if (data[path].error) {
           subscribers.forEach((s) => {
             if (s.onError) {
+              // @ts-expect-error global harden
               s.onError(harden(data[path].error));
             }
           });
@@ -141,6 +143,7 @@ export const makeAgoricChainStorageWatcher = (
         ]);
 
         subscribers.forEach((s) => {
+          // @ts-expect-error global harden
           s.onUpdate(harden(value));
         });
       });
@@ -183,6 +186,7 @@ export const makeAgoricChainStorageWatcher = (
 
     const latestValue = latestValueCache.get(pathKey);
     if (latestValue) {
+      // @ts-expect-error global harden
       subscriber.onUpdate(harden(latestValue[1]) as T);
     }
 

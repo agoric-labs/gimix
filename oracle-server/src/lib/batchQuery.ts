@@ -1,6 +1,6 @@
 /* eslint-disable import/extensions */
 import type { FromCapData } from "@endo/marshal";
-import { AgoricChainStoragePathKind } from "./types";
+import { AgoricChainStoragePathKind } from "./types.js";
 
 export const pathToKey = (path: [AgoricChainStoragePathKind, string]) =>
   path.join(".");

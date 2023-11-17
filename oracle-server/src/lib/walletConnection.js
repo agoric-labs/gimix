@@ -3,21 +3,16 @@ import { SigningStargateClient } from "@cosmjs/stargate";
 import { subscribeLatest } from "@agoric/notifier";
 import { makeInteractiveSigner } from "./makeInteractiveSigner.js";
 import { watchWallet } from "./watchWallet.js";
-import { Errors } from "../errors.js";
 
-export const makeAgoricWalletConnection = async (chainStorageWatcher, rpc) => {
-  if (!("keplr" in window)) {
-    throw Error(Errors.noKeplr);
-  }
-  /** @type {import('@keplr-wallet/types').Keplr} */
-  // @ts-expect-error cast (checked above)
-  const keplr = window.keplr;
-
+export const makeAgoricWalletConnection = async (
+  chainStorageWatcher,
+  rpc,
+  mnemonic
+) => {
   const { address, submitSpendAction, provisionSmartWallet } =
     await makeInteractiveSigner(
-      chainStorageWatcher.chainId,
       rpc,
-      keplr,
+      mnemonic,
       SigningStargateClient.connectWithSigner
     );
 
