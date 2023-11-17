@@ -1,19 +1,18 @@
 /* global harden */
-/* eslint-disable no-use-before-define */
-import { makeClientMarshaller } from "../marshal.js";
+import { makeClientMarshaller } from "./marshal.js";
 import { AgoricChainStoragePathKind } from "./types.js";
 import { batchVstorageQuery, keyToPath, pathToKey } from "./batchQuery.js";
 import type { UpdateHandler } from "./types.js";
 
 type Subscriber<T> = {
   onUpdate: UpdateHandler<T>;
-  onError?: (log: string) => void;
+  onError?: (message: string, code?: number, codespace?: string) => void;
 };
 
 const defaults = {
   newPathQueryDelayMs: 20,
-  refreshLowerBoundMs: 4000,
-  refreshUpperBoundMs: 8000,
+  refreshLowerBoundMs: 2000,
+  refreshUpperBoundMs: 4000,
 };
 
 const randomRefreshPeriod = (
@@ -25,7 +24,7 @@ const randomRefreshPeriod = (
 
 const makePathSubscriber = <T>(
   onUpdate: UpdateHandler<T>,
-  onError?: (log: string) => void
+  onError?: (message: string, code?: number, codespace?: string) => void
 ) => ({
   onUpdate,
   onError,
@@ -36,8 +35,9 @@ export type ChainStorageWatcher = ReturnType<
 >;
 
 /**
- * Periodically queries the most recent data from chain storage.
- * @param apiAddr API server URL
+ * Periodically queries the most recent data from chain storage, batching RPC
+ * requests for efficiency.
+ * @param rpcAddr RPC server URL
  * @param chainId the chain id to use
  * @param onError
  * @param marshaller CapData marshal to use
@@ -47,7 +47,7 @@ export type ChainStorageWatcher = ReturnType<
  * @returns
  */
 export const makeAgoricChainStorageWatcher = (
-  apiAddr: string,
+  rpcAddr: string,
   chainId: string,
   onError?: (e: Error) => void,
   marshaller = makeClientMarshaller(),
@@ -69,7 +69,7 @@ export const makeAgoricChainStorageWatcher = (
   const watchedPathsToSubscribers = new Map<string, Set<Subscriber<unknown>>>();
   let isNewPathWatched = false;
   let isQueryInProgress = false;
-  let nextQueryTimeout: NodeJS.Timeout | null = null;
+  let nextQueryTimeout: number | null = null;
 
   const queueNextQuery = () => {
     if (isQueryInProgress || !watchedPathsToSubscribers.size) {
@@ -79,12 +79,12 @@ export const makeAgoricChainStorageWatcher = (
     if (isNewPathWatched) {
       // If there is any new path to watch, schedule another query very soon.
       if (nextQueryTimeout) {
-        clearTimeout(nextQueryTimeout);
+        window.clearTimeout(nextQueryTimeout);
       }
-      nextQueryTimeout = setTimeout(queryUpdates, newPathQueryDelayMs);
+      nextQueryTimeout = window.setTimeout(queryUpdates, newPathQueryDelayMs);
     } else {
       // Otherwise, refresh after a normal interval.
-      nextQueryTimeout = setTimeout(
+      nextQueryTimeout = window.setTimeout(
         queryUpdates,
         randomRefreshPeriod(refreshLowerBoundMs, refreshUpperBoundMs)
       );
@@ -104,21 +104,21 @@ export const makeAgoricChainStorageWatcher = (
     }
 
     try {
-      const responses = await batchVstorageQuery(
-        apiAddr,
+      const data = await batchVstorageQuery(
+        rpcAddr,
         marshaller.fromCapData,
         paths
       );
-      const data = Object.fromEntries(responses);
       watchedPathsToSubscribers.forEach((subscribers, path) => {
         // Path was watched after query fired, wait until next round.
         if (!data[path]) return;
 
         if (data[path].error) {
           subscribers.forEach((s) => {
+            // @ts-expect-error global harden
+            const { message, code, codespace } = harden(data[path].error);
             if (s.onError) {
-              // @ts-expect-error global harden
-              s.onError(harden(data[path].error));
+              s.onError(message, code, codespace);
             }
           });
           return;
@@ -179,7 +179,7 @@ export const makeAgoricChainStorageWatcher = (
   const watchLatest = <T>(
     path: [AgoricChainStoragePathKind, string],
     onUpdate: (latestValue: T) => void,
-    onPathError?: (log: string) => void
+    onPathError?: (message: string, code?: number, codespace?: string) => void
   ) => {
     const pathKey = pathToKey(path);
     const subscriber = makePathSubscriber(onUpdate, onPathError);
@@ -232,7 +232,7 @@ export const makeAgoricChainStorageWatcher = (
   return {
     watchLatest,
     chainId,
-    apiAddr,
+    rpcAddr,
     marshaller,
     queryOnce,
     queryBoardAux,

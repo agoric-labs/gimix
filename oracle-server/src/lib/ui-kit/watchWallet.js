@@ -5,6 +5,7 @@ import { makeNotifierKit } from "@agoric/notifier";
 // eslint-disable-next-line node/no-extraneous-import
 import { AmountMath } from "@agoric/ertp";
 import { iterateLatest, makeFollower, makeLeader } from "@agoric/casting";
+// import { queryBankBalances } from "../queryBankBalances.js";
 
 /** @typedef {import('@agoric/smart-wallet/src/types.js').Petname} Petname */
 
@@ -36,9 +37,8 @@ import { iterateLatest, makeFollower, makeLeader } from "@agoric/casting";
 /**
  * @param {any} chainStorageWatcher
  * @param {string} address
- * @param {string} rpc
  */
-export const watchWallet = (chainStorageWatcher, address, rpc) => {
+export const watchWallet = async (chainStorageWatcher, address) => {
   const pursesNotifierKit = makeNotifierKit(
     /** @type {PurseInfo[] | null} */ (null)
   );
@@ -85,16 +85,21 @@ export const watchWallet = (chainStorageWatcher, address, rpc) => {
         harden(currentPaths)
       );
     },
-    (err) => {
+    (log, code, codespace) => {
+      // Check the error code to see if smart wallet just does not exist.
+      // Otherwise, there was an error doing the query, so throw.
+      //
+      // Also check the log for backwards compatibility, as the code changed.
       if (
         !lastPaths &&
-        err === "could not get vstorage path: unknown request"
+        (log === "could not get vstorage path: unknown request" ||
+          (code === 38 && codespace === "sdk"))
       ) {
         smartWalletStatusNotifierKit.updater.updateState(
           harden({ provisioned: false })
         );
       } else {
-        throw Error(err);
+        throw Error(log);
       }
     }
   );
@@ -130,6 +135,16 @@ export const watchWallet = (chainStorageWatcher, address, rpc) => {
         updatePurses(brandToPurse);
       };
 
+      // const watchBank = async () => {
+      //   const balances = await queryBankBalances(
+      //     address,
+      //     chainStorageWatcher.rpcAddr
+      //   );
+      //   bank = balances;
+      //   possiblyUpdateBankPurses();
+      //   setTimeout(watchBank, POLL_INTERVAL_MS);
+      // };
+
       const watchVbankAssets = () => {
         chainStorageWatcher.watchLatest(
           ["data", "published.agoricNames.vbankAsset"],
@@ -141,6 +156,7 @@ export const watchWallet = (chainStorageWatcher, address, rpc) => {
       };
 
       void watchVbankAssets();
+      // void watchBank();
     }
 
     {
@@ -215,7 +231,7 @@ export const watchWallet = (chainStorageWatcher, address, rpc) => {
   };
 
   const watchWalletUpdates = async () => {
-    const leader = makeLeader(rpc);
+    const leader = makeLeader(chainStorageWatcher.rpcAddr);
     const follower = makeFollower(`:published.wallet.${address}`, leader, {
       proof: "none",
       unserializer: chainStorageWatcher.marshaller,
