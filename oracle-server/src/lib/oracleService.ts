@@ -37,7 +37,7 @@ let acceptId: string; // keeps track of last acceptId. // todo, persist better
 export const makeOracleService = async () => {
   if (oracleService) return oracleService;
   const { rpcUrl, chainName } = await getNetConfig();
-  watcher = makeAgoricChainStorageWatcher(rpcUrl, chainName);
+  watcher = makeAgoricChainStorageWatcher(rpcUrl, chainName, console.error);
   const mnemonic = getEnvVar("WALLET_MNEMONIC");
   walletConnection = await makeAgoricWalletConnection(
     watcher,
