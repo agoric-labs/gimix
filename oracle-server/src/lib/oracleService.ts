@@ -101,7 +101,7 @@ export const makeOracleService = async () => {
         previousOffer: acceptId,
         invitationMakerName: "JobReport",
         instance: instance,
-        invitationArgs: [deliverDepositAddr, issueURL, jobID, prURL],
+        invitationArgs: [{ deliverDepositAddr, issueURL, jobID, prURL }],
       },
       {},
       undefined,
