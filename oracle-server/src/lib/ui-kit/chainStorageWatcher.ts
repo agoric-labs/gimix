@@ -1,6 +1,6 @@
 /* global harden */
 /* eslint-disable no-use-before-define */
-import { makeClientMarshaller } from "./marshal.js";
+import { makeClientMarshaller } from "../marshal.js";
 import { AgoricChainStoragePathKind } from "./types.js";
 import { batchVstorageQuery, keyToPath, pathToKey } from "./batchQuery.js";
 import type { UpdateHandler } from "./types.js";

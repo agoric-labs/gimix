@@ -9,7 +9,7 @@ import {
   createAuthzAminoConverters,
 } from "@cosmjs/stargate";
 import { MsgWalletSpendAction } from "@agoric/cosmic-proto/swingset/msgs.js";
-import { hdPath, Agoric, stableCurrency, bech32Config } from "./chainInfo.js";
+import { hdPath, Agoric, stableCurrency, bech32Config } from "../chainInfo.js";
 
 /** @typedef {import("@cosmjs/proto-signing").EncodeObject} EncodeObject */
 /** @typedef {import("@cosmjs/stargate").AminoConverters} AminoConverters */

@@ -1,14 +1,28 @@
 /* global harden */
 import { SigningStargateClient } from "@cosmjs/stargate";
 import { subscribeLatest } from "@agoric/notifier";
+// @ts-expect-error no types
 import { makeInteractiveSigner } from "./makeInteractiveSigner.js";
+// @ts-expect-error no types
 import { watchWallet } from "./watchWallet.js";
+import { ChainStorageWatcher } from "./chainStorageWatcher.js";
 
 export const makeAgoricWalletConnection = async (
-  chainStorageWatcher,
-  rpc,
-  mnemonic
-) => {
+  chainStorageWatcher: ChainStorageWatcher,
+  rpc: string,
+  mnemonic: string
+): Promise<{
+  makeOffer: (
+    invitationSpec: unknown,
+    proposal: unknown,
+    offerArgs: unknown,
+    onStatusChange: (status: { status: string; data?: unknown }) => void,
+    id?: number
+  ) => Promise<void>;
+  address: string;
+  provisionSmartWallet: unknown;
+  walletUpdatesNotifier: unknown;
+}> => {
   const { address, submitSpendAction, provisionSmartWallet } =
     await makeInteractiveSigner(
       rpc,
@@ -19,14 +33,15 @@ export const makeAgoricWalletConnection = async (
   const walletNotifiers = watchWallet(chainStorageWatcher, address, rpc);
 
   const makeOffer = async (
-    invitationSpec,
-    proposal,
-    offerArgs,
-    onStatusChange,
+    invitationSpec: unknown,
+    proposal: unknown,
+    offerArgs: unknown,
+    onStatusChange: (status: { status: string; data?: unknown }) => void,
     id = new Date().getTime()
-  ) => {
+  ): Promise<void> => {
     const { marshaller } = chainStorageWatcher;
     const spendAction = marshaller.toCapData(
+      // @ts-expect-error global harden
       harden({
         method: "executeOffer",
         offer: {
@@ -71,6 +86,6 @@ export const makeAgoricWalletConnection = async (
     makeOffer,
     address,
     provisionSmartWallet,
-    ...walletNotifiers,
+    walletUpdatesNotifier: walletNotifiers.walletUpdatesNotifier,
   };
 };

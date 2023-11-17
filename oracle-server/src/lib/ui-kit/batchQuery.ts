@@ -1,4 +1,3 @@
-/* eslint-disable import/extensions */
 import type { FromCapData } from "@endo/marshal";
 import { AgoricChainStoragePathKind } from "./types.js";
 

@@ -321,6 +321,15 @@
     vite "^4.3.2"
     vite-tsconfig-paths "^4.2.0"
 
+"@agoric/rpc@^0.7.2":
+  version "0.7.2"
+  resolved "https://registry.yarnpkg.com/@agoric/rpc/-/rpc-0.7.2.tgz#6aff2222a257a7cfc444304a1d23002f88b34b5c"
+  integrity sha512-U0KpMj4olVmMjWQdABi8MGnfw8LYjIAcbeKXl1HUaRn3kU5ow7oQDWvtE+e5/j7zwZi+4aVDJbUrmyypaLSCjQ==
+  dependencies:
+    "@endo/marshal" "^0.8.9"
+    vite "^4.3.2"
+    vite-tsconfig-paths "^4.2.0"
+
 "@agoric/sharing-service@^0.2.11":
   version "0.2.11"
   resolved "https://registry.yarnpkg.com/@agoric/sharing-service/-/sharing-service-0.2.11.tgz#ff7714f10bb7038e8ebfc51c06ffe0472f2caaa1"
