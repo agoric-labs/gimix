@@ -2,6 +2,12 @@
 
 GiMiX is an Agoric dapp to make a market for completing GitHub issues.
 
+<p align="center">
+<img alt="screenshot of form: issue url, amount, dealine"
+  src="https://user-images.githubusercontent.com/150986/283666704-0ac0df46-72ca-48a3-8a01-99246e491007.png"
+  width="400" />
+</p>
+
  1. Requestor proposes a bounty by choosing an issue and
     putting the bounty assets in escrow for a period of time.
  2. Responder negotiates an assignment to the issue,
