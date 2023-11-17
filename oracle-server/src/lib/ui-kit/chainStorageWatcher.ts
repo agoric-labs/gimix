@@ -236,5 +236,6 @@ export const makeAgoricChainStorageWatcher = (
     marshaller,
     queryOnce,
     queryBoardAux,
+    watchedPathsToSubscribers,
   };
 };

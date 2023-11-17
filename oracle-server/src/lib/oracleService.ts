@@ -16,22 +16,26 @@ const getNetConfig = async () => {
   };
 };
 
+export type JobReport = {
+  deliverDepositAddr: string;
+  issueURL: string;
+  jobID: bigint;
+  prURL: string;
+};
+
 export type OracleService = {
-  state: Map<string, unknown>;
   walletConnection: Awaited<ReturnType<typeof makeAgoricWalletConnection>>;
   watcher: ChainStorageWatcher;
   acceptOracleOffer: () => Promise<void>;
-  sendJobReport: (issueUrl: string, jobId: bigint) => Promise<void>;
+  sendJobReport: (jobReport: JobReport) => Promise<void>;
 };
 
 let watcher: ChainStorageWatcher;
 let walletConnection: Awaited<ReturnType<typeof makeAgoricWalletConnection>>;
 let oracleService: OracleService;
-
+let acceptId: string; // keeps track of last acceptId. // todo, persist better
 export const makeOracleService = async () => {
   if (oracleService) return oracleService;
-  const state = new Map();
-
   const { rpcUrl, chainName } = await getNetConfig();
   watcher = makeAgoricChainStorageWatcher(rpcUrl, chainName);
   const mnemonic = getEnvVar("WALLET_MNEMONIC");
@@ -41,19 +45,26 @@ export const makeOracleService = async () => {
     mnemonic
   );
 
-  watcher.watchLatest<Array<[string, unknown]>>(
-    ["data" as Kind.Data, "published.agoricNames.instance"],
-    (instances) => {
-      console.log("got instances", instances);
-      state.set(
-        "instance",
-        instances.find(([name]) => name === "GiMiX")!.at(1)
-      );
-    }
-  );
+  setTimeout(() => {
+    console.log("3s timer done");
+    const keysArray = Array.from(watcher.watchedPathsToSubscribers.keys());
+    console.log("keys", keysArray);
+  }, 3000);
+
+  setTimeout(() => {
+    console.log("15s timer done");
+    const keysArray = Array.from(watcher.watchedPathsToSubscribers.keys());
+    console.log("keys", keysArray);
+  }, 15000);
+
+  const instance = watcher
+    .queryOnce([Kind.Data, "published.agoricNames.instance"])
+    .then((x) => Object.fromEntries(x as [string, unknown][])["GiMiX"])
+    .catch(console.error);
+
+  console.log("hi from oracleService");
 
   const acceptOracleOffer = async () => {
-    const instance = state.get("instance");
     console.log("instance", instance);
     if (!instance) throw new Error("cannot find contract instance");
     return walletConnection?.makeOffer(
@@ -69,24 +80,28 @@ export const makeOracleService = async () => {
           console.log(`Offer error: ${update.data}`);
         }
         if (update.status === "accepted") {
-          console.log("Offer accepted");
+          console.log("Offer accepted", update);
+          /// XXX TODO, save acceptId
+          acceptId = update.data as string;
         }
         if (update.status === "refunded") {
-          console.log("Offer rejected");
+          console.log("Offer rejected", update);
         }
       }
     );
   };
 
-  const sendJobReport = async (_issueUrl: string, _jobId: bigint) => {
-    const instance = state.get("instance");
-    console.log("instance", instance);
+  const sendJobReport = async (jobReport: JobReport) => {
     if (!instance) throw new Error("cannot find contract instance");
+    if (!acceptId) throw new Error("cannot found oracle acceptId");
+    const { deliverDepositAddr, issueURL, jobID, prURL } = jobReport;
     return walletConnection?.makeOffer(
       {
-        // source: "purse",
+        source: "continuing",
+        previousOffer: acceptId,
+        invitationMakerName: "JobReport",
         instance: instance,
-        // description: "gimix oracle invitation",
+        invitationArgs: [deliverDepositAddr, issueURL, jobID, prURL],
       },
       {},
       undefined,
@@ -105,7 +120,6 @@ export const makeOracleService = async () => {
   };
 
   oracleService = {
-    state,
     walletConnection,
     watcher,
     acceptOracleOffer,
