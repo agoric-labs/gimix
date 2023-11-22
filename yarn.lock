@@ -312,12 +312,12 @@
     "@endo/marshal" "0.8.5"
     "@endo/promise-kit" "0.2.56"
 
-"@agoric/rpc@^0.6.0":
-  version "0.6.0"
-  resolved "https://registry.yarnpkg.com/@agoric/rpc/-/rpc-0.6.0.tgz#67a7a67a7053640fc942edf25834db53b8eeb5dd"
-  integrity sha512-gachE+oO5Iz9q8my9PWmiO1u38Lfsk/327OwuE/W8+4MoWcggtKXofQHLPoXRAE7ZYE6lz/ExW+fNm9TOBpoUA==
+"@agoric/rpc@^0.7.2":
+  version "0.7.2"
+  resolved "https://registry.yarnpkg.com/@agoric/rpc/-/rpc-0.7.2.tgz#6aff2222a257a7cfc444304a1d23002f88b34b5c"
+  integrity sha512-U0KpMj4olVmMjWQdABi8MGnfw8LYjIAcbeKXl1HUaRn3kU5ow7oQDWvtE+e5/j7zwZi+4aVDJbUrmyypaLSCjQ==
   dependencies:
-    "@endo/marshal" "^0.8.8"
+    "@endo/marshal" "^0.8.9"
     vite "^4.3.2"
     vite-tsconfig-paths "^4.2.0"
 
@@ -588,10 +588,10 @@
     "@agoric/store" "^0.9.3-u12.0"
     "@endo/nat" "4.1.27"
 
-"@agoric/ui-components@^0.9.0":
-  version "0.9.0"
-  resolved "https://registry.yarnpkg.com/@agoric/ui-components/-/ui-components-0.9.0.tgz#0177f71d6752836f326d5309f302052861b5e23a"
-  integrity sha512-Ed8ZS1sprma+DLx1gBcCczIFlZ5jxLVUXqZPp32R5QnuOn9IfeDK4B+xhm7BJYr+0Lr2BNof9yqkvmWBmUEvNQ==
+"@agoric/ui-components@^0.10.0":
+  version "0.10.0"
+  resolved "https://registry.yarnpkg.com/@agoric/ui-components/-/ui-components-0.10.0.tgz#48a3329dc002669abb8bb0616b6e1a04cd4eecc3"
+  integrity sha512-BI3J6m4/YUCQ0p20HEmzwYe/ZHlvl9S6hv/HmpWsBotn97/8oUzMNnTze28ILEsY4PfeNGw5SgA9J/yGrWux5w==
   dependencies:
     "@agoric/assert" "^0.6.0"
     "@agoric/ertp" "^0.16.2"
@@ -686,10 +686,10 @@
     eslint-plugin-eslint-comments "^3.1.2"
     import-meta-resolve "^2.2.1"
 
-"@agoric/web-components@^0.12.0":
-  version "0.12.0"
-  resolved "https://registry.yarnpkg.com/@agoric/web-components/-/web-components-0.12.0.tgz#9695bab6b3fc9fb06c54d25fd55185b86ef8a6ee"
-  integrity sha512-jC9VujZvp0gCSnSKw8ae8zGntd6KYBMxV1K5SOAcQMsSG5jx1kHpSQkQCtsw+obkCzM8CS2lFwD1uFSfX/qiSw==
+"@agoric/web-components@^0.13.2":
+  version "0.13.2"
+  resolved "https://registry.yarnpkg.com/@agoric/web-components/-/web-components-0.13.2.tgz#5bb6c43892269a2852371216cb19f7179652fb64"
+  integrity sha512-2Vd6t72lNkJv8Yv6EJFid77YpNgBicFR8AqsKu25Y4puBu9j+RqpkUFuPVjmzpecsCLQmWi1GUSDRNJE4HVPNQ==
   dependencies:
     "@agoric/assert" "^0.6.0"
     "@agoric/cache" "^0.3.2"

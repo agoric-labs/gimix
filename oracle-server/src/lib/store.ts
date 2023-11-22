@@ -1,3 +1,7 @@
+/**
+ * store for gh refresh tokens
+ */
+
 import type { Token } from "@fastify/oauth2";
 
 type MemoryStore = Map<string, Token>;

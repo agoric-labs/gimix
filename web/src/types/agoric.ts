@@ -5,7 +5,7 @@ export type Purse = {
   };
 };
 
-export type WalletData = {
+export type CurrentWalletData = {
   purses: Purse[];
   liveOffers: unknown;
   offerToPublicSubscriberPaths: unknown[];
@@ -15,3 +15,10 @@ export type WalletData = {
 export type InstanceData = [string, unknown][];
 
 export type BrandData = [string, unknown][];
+
+export type WalletData = {
+  status: {
+    invitationSpec: { publicInvitationMaker: string };
+    result: string;
+  };
+};

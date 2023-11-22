@@ -13,7 +13,7 @@ test.beforeEach(async (t) => {
   });
 
   const context = t.context;
-  context.app = makeApp({ logger: false });
+  context.app = await makeApp({ logger: false });
 });
 
 test.afterEach.always(async (t) => {
