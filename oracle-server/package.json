@@ -21,7 +21,6 @@
     "@agoric/cosmic-proto": "^0.3.0",
     "@agoric/internal": "^0.4.0-u12.0",
     "@agoric/notifier": "^0.6.3-u12.0",
-    "@agoric/rpc": "^0.7.2",
     "@agoric/smart-wallet": "^0.5.4-u12.0",
     "@agoric/vats": "^0.15.2-u12.0",
     "@cosmjs/crypto": "^0.31.3",
