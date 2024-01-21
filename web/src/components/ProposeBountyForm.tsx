@@ -12,7 +12,8 @@ import { useQuery } from "@tanstack/react-query";
 import { useWallet } from "../hooks/useWallet";
 import { selectBldCoins } from "../lib/selectors";
 import { renderCoins } from "../utils/coin";
-// import { TimeMath } from "@agoric/time";
+// @ts-expect-error no types
+import { TimeMath } from "@agoric/time";
 
 interface ProposeBountyFormProps {
   title: ReactNode;
@@ -56,14 +57,11 @@ const ProposeBountyForm = ({ title, description }: ProposeBountyFormProps) => {
       });
       throw new Error("Deadline must be a date in the future.");
     }
-    // todo harden
-    const deadline = {
-      timerBrand: brands.timer,
-      absValue: BigInt(proposedTime / 1000),
-    };
-    // TODO use TimeMath
-    // TimeMath.coerceTimestampRecord(BigInt(proposedTime / 1000), brands.timer);
-    // also maybe see makeTimestampRecord
+
+    const deadline = TimeMath.coerceTimestampRecord(
+      BigInt(proposedTime / 1000),
+      brands.timer,
+    );
 
     const toastId = createId();
     toast.loading("Broadcasting transaction...", {
