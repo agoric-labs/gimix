@@ -1,13 +1,15 @@
 {
   "compilerOptions": {
-    "target": "es2021",
+    "target": "es2022",
     "module": "NodeNext",
     "outDir": "dist",
     "rootDir": ".",
     "strict": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
-    "moduleResolution": "NodeNext"
+    "moduleResolution": "NodeNext",
+    "allowJs": true,
+    "maxNodeModuleJsDepth": 2
   },
   "include": ["src/**/*", "test/**/*"],
   "exclude": ["node_modules"]

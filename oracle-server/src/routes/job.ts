@@ -31,7 +31,7 @@ export const job: FastifyPluginCallback = (fastify, _, done) => {
         const userAccessToken = _userAccessToken.split("Bearer ")[1];
         if (!_userAccessToken)
           return reply.status(401).send("Unable to parse access token.");
-        
+
         const userOctokit = createUserOctokit(userAccessToken);
         if (!userOctokit) {
           return reply
@@ -92,22 +92,37 @@ export const job: FastifyPluginCallback = (fastify, _, done) => {
 
         // 6. ensure the issue has a bounty
         // 6.1 check that jobId is associated with issueUrl
-        /// XXX TODO, need to query blockchain state
-        const _issueUrl = issueRef.url;
-        const _issueNumber = issueRef.number;
+        /// XXX TODO maybe not a consideration for this application,
+        // although it'd be nice
 
-        // XXX TODO sendJobReport, all criteria met
-        // sendJobReport
-        const _w = walletAddress;
+        // 7. sendJobReport, all criteria met
+        const jobReport = {
+          deliverDepositAddr: walletAddress,
+          issueURL: issueRef.url,
+          jobID: BigInt(jobId),
+          prURL: prUrl,
+        };
+
+        console.log("Preparing job report...", jobReport);
+        const { sendJobReport } = fastify.oracleService;
+        try {
+          await sendJobReport(jobReport);
+        } catch (e) {
+          console.error(e);
+          return reply.status(500).send("Error broadcasting message");
+        }
 
         reply.send({ ok: true, jobId });
       } catch (e) {
         console.error("/job/claim error", e);
         reply.status(500).send("Unexpected error.");
       }
-    }
+    },
   );
 
+  // XXX currently done directly with the contract
+  // this can be leveraged if we want the oracle server
+  // to be aware of new bounties so it can post comments
   fastify.post(
     "/job/propose",
     async (_req: FastifyRequest<ProposeJob>, _reply) => {
@@ -116,7 +131,7 @@ export const job: FastifyPluginCallback = (fastify, _, done) => {
       // 1. verify that issue exists
       // 2. verify jobId is on chain + associated w/ issue
       // 3. comment jobId, amount, + deadline on the issue from bot
-    }
+    },
   );
   done();
 };

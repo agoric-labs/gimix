@@ -1,1 +1,0 @@
-// XXXX stargate signing client

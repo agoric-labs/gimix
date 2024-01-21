@@ -10,9 +10,10 @@ import { useNetwork, NetName } from "../hooks/useNetwork";
 import { accountBalancesQuery } from "../lib/queries";
 import { useQuery } from "@tanstack/react-query";
 import { useWallet } from "../hooks/useWallet";
-import { selectIstCoins } from "../lib/selectors";
+import { selectBldCoins } from "../lib/selectors";
 import { renderCoins } from "../utils/coin";
-// import { TimeMath } from "@agoric/time";
+// @ts-expect-error no types
+import { TimeMath } from "@agoric/time";
 
 interface ProposeBountyFormProps {
   title: ReactNode;
@@ -26,9 +27,10 @@ const ProposeBountyForm = ({ title, description }: ProposeBountyFormProps) => {
   const { walletAddress } = useWallet();
 
   const accountBalances = useQuery(accountBalancesQuery(api, walletAddress));
-  const istCoins = useMemo(
-    () => selectIstCoins(accountBalances),
-    [accountBalances]
+
+  const bldCoins = useMemo(
+    () => selectBldCoins(accountBalances),
+    [accountBalances],
   );
 
   const makeProposal = ({
@@ -40,7 +42,6 @@ const ProposeBountyForm = ({ title, description }: ProposeBountyFormProps) => {
     amount: number;
     deadlineDate: string; // datestring
   }) => {
-    console.log("timerService", timerService);
     if (!brands) throw new Error("Unable to fetch brands.");
     if (!connection) throw new Error("Not connected to signer.");
     if (!instance) throw new Error("Contract instance not found.");
@@ -56,14 +57,11 @@ const ProposeBountyForm = ({ title, description }: ProposeBountyFormProps) => {
       });
       throw new Error("Deadline must be a date in the future.");
     }
-    // todo harden
-    const deadline = {
-      timerBrand: brands.timer,
-      absValue: BigInt(proposedTime / 1000),
-    };
-    // TODO use TimeMath
-    // TimeMath.coerceTimestampRecord(BigInt(proposedTime / 1000), brands.timer);
-    // also maybe see makeTimestampRecord
+
+    const deadline = TimeMath.coerceTimestampRecord(
+      BigInt(proposedTime / 1000),
+      brands.timer,
+    );
 
     const toastId = createId();
     toast.loading("Broadcasting transaction...", {
@@ -78,12 +76,12 @@ const ProposeBountyForm = ({ title, description }: ProposeBountyFormProps) => {
       },
       {
         give: {
-          Acceptance: AmountMath.make(brands.IST, adjAmount),
+          Acceptance: AmountMath.make(brands.BLD, adjAmount),
         },
         want: {
           Stamp: AmountMath.make(
             brands.GimixOracle,
-            makeCopyBag([[`Fixed ${issueUrl}`, 1n]])
+            makeCopyBag([[`Fixed ${issueUrl}`, 1n]]),
           ),
         },
 
@@ -130,7 +128,7 @@ const ProposeBountyForm = ({ title, description }: ProposeBountyFormProps) => {
         }
         // if (update.status === "accepted") {}
         // if (update.status === "refunded") {}
-      }
+      },
     );
   };
 
@@ -204,7 +202,7 @@ const ProposeBountyForm = ({ title, description }: ProposeBountyFormProps) => {
                   <span>
                     Current balance:{" "}
                     <span className="font-semibold">
-                      {istCoins ? renderCoins(istCoins) : "Unavailable"}
+                      {bldCoins ? renderCoins(bldCoins) : "Unavailable"}
                     </span>
                   </span>
                 </p>

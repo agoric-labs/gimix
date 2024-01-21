@@ -14,4 +14,6 @@ export interface ProcessEnv {
   GITHUB_CLIENT_SECRET: string;
   GITHUB_INSTALLATION_ID: string;
   GITHUB_PEM_PATH: string;
+  AGORIC_NET: "local" | "devnet" | "emerynet" | "main";
+  WALLET_MNEMONIC: string;
 }
