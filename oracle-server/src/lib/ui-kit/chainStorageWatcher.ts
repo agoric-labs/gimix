@@ -17,14 +17,14 @@ const defaults = {
 
 const randomRefreshPeriod = (
   refreshLowerBoundMs: number,
-  refreshUpperBoundMs: number
+  refreshUpperBoundMs: number,
 ) =>
   Math.round(Math.random() * (refreshUpperBoundMs - refreshLowerBoundMs)) +
   refreshLowerBoundMs;
 
 const makePathSubscriber = <T>(
   onUpdate: UpdateHandler<T>,
-  onError?: (message: string, code?: number, codespace?: string) => void
+  onError?: (message: string, code?: number, codespace?: string) => void,
 ) => ({
   onUpdate,
   onError,
@@ -53,7 +53,7 @@ export const makeAgoricChainStorageWatcher = (
   marshaller = makeClientMarshaller(),
   newPathQueryDelayMs = defaults.newPathQueryDelayMs,
   refreshLowerBoundMs = defaults.refreshLowerBoundMs,
-  refreshUpperBoundMs = defaults.refreshUpperBoundMs
+  refreshUpperBoundMs = defaults.refreshUpperBoundMs,
 ) => {
   // Map of paths to [identifier, value] pairs of most recent response values.
   //
@@ -69,7 +69,7 @@ export const makeAgoricChainStorageWatcher = (
   const watchedPathsToSubscribers = new Map<string, Set<Subscriber<unknown>>>();
   let isNewPathWatched = false;
   let isQueryInProgress = false;
-  let nextQueryTimeout: number | null = null;
+  let nextQueryTimeout: ReturnType<typeof setTimeout> | null = null;
 
   const queueNextQuery = () => {
     if (isQueryInProgress || !watchedPathsToSubscribers.size) {
@@ -79,14 +79,17 @@ export const makeAgoricChainStorageWatcher = (
     if (isNewPathWatched) {
       // If there is any new path to watch, schedule another query very soon.
       if (nextQueryTimeout) {
-        window.clearTimeout(nextQueryTimeout);
+        globalThis.clearTimeout(nextQueryTimeout);
       }
-      nextQueryTimeout = window.setTimeout(queryUpdates, newPathQueryDelayMs);
+      nextQueryTimeout = globalThis.setTimeout(
+        queryUpdates,
+        newPathQueryDelayMs,
+      );
     } else {
       // Otherwise, refresh after a normal interval.
-      nextQueryTimeout = window.setTimeout(
+      nextQueryTimeout = globalThis.setTimeout(
         queryUpdates,
-        randomRefreshPeriod(refreshLowerBoundMs, refreshUpperBoundMs)
+        randomRefreshPeriod(refreshLowerBoundMs, refreshUpperBoundMs),
       );
     }
   };
@@ -107,7 +110,7 @@ export const makeAgoricChainStorageWatcher = (
       const data = await batchVstorageQuery(
         rpcAddr,
         marshaller.fromCapData,
-        paths
+        paths,
       );
       watchedPathsToSubscribers.forEach((subscribers, path) => {
         // Path was watched after query fired, wait until next round.
@@ -179,7 +182,7 @@ export const makeAgoricChainStorageWatcher = (
   const watchLatest = <T>(
     path: [AgoricChainStoragePathKind, string],
     onUpdate: (latestValue: T) => void,
-    onPathError?: (message: string, code?: number, codespace?: string) => void
+    onPathError?: (message: string, code?: number, codespace?: string) => void,
   ) => {
     const pathKey = pathToKey(path);
     const subscriber = makePathSubscriber(onUpdate, onPathError);
@@ -196,7 +199,7 @@ export const makeAgoricChainStorageWatcher = (
     } else {
       watchedPathsToSubscribers.set(
         pathKey,
-        new Set([subscriber as Subscriber<unknown>])
+        new Set([subscriber as Subscriber<unknown>]),
       );
       queueNewPathForQuery();
     }
@@ -212,7 +215,7 @@ export const makeAgoricChainStorageWatcher = (
           stop();
           res(val);
         },
-        (e) => rej(e)
+        (e) => rej(e),
       );
     });
 
@@ -225,7 +228,7 @@ export const makeAgoricChainStorageWatcher = (
       queryOnce<T>([
         AgoricChainStoragePathKind.Data,
         `published.boardAux.${id}`,
-      ])
+      ]),
     );
   };
 

@@ -34,6 +34,7 @@ let watcher: ChainStorageWatcher;
 let walletConnection: Awaited<ReturnType<typeof makeAgoricWalletConnection>>;
 let oracleService: OracleService;
 let acceptId: string; // keeps track of last acceptId. // todo, persist better
+
 export const makeOracleService = async () => {
   if (oracleService) return oracleService;
   const { rpcUrl, chainName } = await getNetConfig();
@@ -42,27 +43,13 @@ export const makeOracleService = async () => {
   walletConnection = await makeAgoricWalletConnection(
     watcher,
     rpcUrl,
-    mnemonic
+    mnemonic,
   );
 
-  setTimeout(() => {
-    console.log("3s timer done");
-    const keysArray = Array.from(watcher.watchedPathsToSubscribers.keys());
-    console.log("keys", keysArray);
-  }, 3000);
-
-  setTimeout(() => {
-    console.log("15s timer done");
-    const keysArray = Array.from(watcher.watchedPathsToSubscribers.keys());
-    console.log("keys", keysArray);
-  }, 15000);
-
-  const instance = watcher
+  const instance = await watcher
     .queryOnce([Kind.Data, "published.agoricNames.instance"])
     .then((x) => Object.fromEntries(x as [string, unknown][])["GiMiX"])
     .catch(console.error);
-
-  console.log("hi from oracleService");
 
   const acceptOracleOffer = async () => {
     console.log("instance", instance);
@@ -83,11 +70,12 @@ export const makeOracleService = async () => {
           console.log("Offer accepted", update);
           /// XXX TODO, save acceptId
           acceptId = update.data as string;
+          console.log("acceptId", acceptId);
         }
         if (update.status === "refunded") {
           console.log("Offer rejected", update);
         }
-      }
+      },
     );
   };
 
@@ -115,7 +103,7 @@ export const makeOracleService = async () => {
         if (update.status === "refunded") {
           console.log("Offer rejected");
         }
-      }
+      },
     );
   };
 

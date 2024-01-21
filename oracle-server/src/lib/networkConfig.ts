@@ -1,4 +1,3 @@
-// @ts-expect-error no types
 import { NonNullish } from "@agoric/assert";
 import { boardSlottingMarshaller } from "@agoric/vats/tools/board-utils.js";
 
@@ -23,7 +22,7 @@ const fromAgoricNet = (str: string): Promise<MinimalNetworkConfig> => {
 };
 
 export const getNetworkConfig = async (
-  env: typeof process.env
+  env: typeof process.env,
 ): Promise<MinimalNetworkConfig> => {
   if (!("AGORIC_NET" in env) || env.AGORIC_NET === "local") {
     return { rpcAddrs: ["http://0.0.0.0:26657"], chainName: "agoriclocal" };
@@ -31,7 +30,9 @@ export const getNetworkConfig = async (
 
   return fromAgoricNet(NonNullish(env.AGORIC_NET)).catch((err) => {
     throw Error(
-      `cannot get network config (${env.AGORIC_NET || "local"}): ${err.message}`
+      `cannot get network config (${env.AGORIC_NET || "local"}): ${
+        err.message
+      }`,
     );
   });
 };

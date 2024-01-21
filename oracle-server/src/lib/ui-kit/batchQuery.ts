@@ -56,7 +56,11 @@ export const batchVstorageQuery = (
             ];
           }
 
-          const data = JSON.parse(window.atob(entry.result.response.value));
+          const data = JSON.parse(
+            Buffer.from(entry.result.response.value, "base64").toString(
+              "binary",
+            ),
+          );
 
           if (paths[index][0] === AgoricChainStoragePathKind.Children) {
             return [

@@ -28,8 +28,8 @@ const makeTranslationTable = (
   return harden({ convertValToSlot, convertSlotToVal });
 };
 
-const synthesizeRemotable = (_slot: unknown, iface: string | undefined) =>
-  Far((iface ?? "").replace(/^Alleged: /, ""), {});
+const synthesizeRemotable = (slot: unknown, iface: string | undefined) =>
+  Far(`${(iface ?? "").replace(/^Alleged: /, "")}#${slot}`, {});
 
 const { convertValToSlot, convertSlotToVal } = makeTranslationTable((slot) => {
   throw new Error(`unknown id: ${slot}`);

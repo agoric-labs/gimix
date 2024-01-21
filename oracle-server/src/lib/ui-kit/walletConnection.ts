@@ -1,9 +1,7 @@
 /* global harden */
 import { SigningStargateClient } from "@cosmjs/stargate";
 import { subscribeLatest } from "@agoric/notifier";
-// @ts-expect-error no types
 import { makeInteractiveSigner } from "./makeInteractiveSigner.js";
-// @ts-expect-error no types
 import { watchWallet } from "./watchWallet.js";
 import { ChainStorageWatcher } from "./chainStorageWatcher.js";
 
@@ -30,7 +28,7 @@ export const makeAgoricWalletConnection = async (
       SigningStargateClient.connectWithSigner
     );
 
-  const walletNotifiers = watchWallet(chainStorageWatcher, address, rpc);
+  const walletNotifiers = watchWallet(chainStorageWatcher, address);
 
   const makeOffer = async (
     invitationSpec: unknown,
