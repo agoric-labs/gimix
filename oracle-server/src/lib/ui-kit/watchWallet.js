@@ -1,5 +1,4 @@
 /* global harden */
-// @ts-check
 import { assert } from "@agoric/assert";
 import { makeNotifierKit } from "@agoric/notifier";
 // eslint-disable-next-line node/no-extraneous-import
@@ -37,10 +36,11 @@ import { iterateLatest, makeFollower, makeLeader } from "@agoric/casting";
 /**
  * @param {any} chainStorageWatcher
  * @param {string} address
+ * @returns {ReturnType<typeof watchWallet>}
  */
 export const watchWallet = async (chainStorageWatcher, address) => {
   const pursesNotifierKit = makeNotifierKit(
-    /** @type {PurseInfo[] | null} */ (null)
+    /** @type {PurseInfo[] | null} */ (null),
   );
 
   const updatePurses = (brandToPurse) => {
@@ -58,17 +58,17 @@ export const watchWallet = async (chainStorageWatcher, address) => {
   const publicSubscriberPathsNotifierKit = makeNotifierKit(
     /** @type {  import('@agoric/smart-wallet/src/smartWallet.js').CurrentWalletRecord['offerToPublicSubscriberPaths'] | null } */ (
       null
-    )
+    ),
   );
 
   const walletUpdatesNotifierKit = makeNotifierKit(
     /** @type {  import('@agoric/smart-wallet/src/smartWallet.js').UpdateRecord | null } */ (
       null
-    )
+    ),
   );
 
   const smartWalletStatusNotifierKit = makeNotifierKit(
-    /** @type { {provisioned: boolean} | null } */ (null)
+    /** @type { {provisioned: boolean} | null } */ (null),
   );
 
   let lastPaths;
@@ -76,13 +76,13 @@ export const watchWallet = async (chainStorageWatcher, address) => {
     ["data", `published.wallet.${address}.current`],
     (value) => {
       smartWalletStatusNotifierKit.updater.updateState(
-        harden({ provisioned: true })
+        harden({ provisioned: true }),
       );
       const { offerToPublicSubscriberPaths: currentPaths } = value;
       if (currentPaths === lastPaths) return;
 
       publicSubscriberPathsNotifierKit.updater.updateState(
-        harden(currentPaths)
+        harden(currentPaths),
       );
     },
     (log, code, codespace) => {
@@ -96,12 +96,12 @@ export const watchWallet = async (chainStorageWatcher, address) => {
           (code === 38 && codespace === "sdk"))
       ) {
         smartWalletStatusNotifierKit.updater.updateState(
-          harden({ provisioned: false })
+          harden({ provisioned: false }),
         );
       } else {
         throw Error(log);
       }
-    }
+    },
   );
 
   const watchChainBalances = () => {
@@ -117,7 +117,7 @@ export const watchWallet = async (chainStorageWatcher, address) => {
         if (!vbankAssets || !bank) return;
 
         const bankMap = new Map(
-          bank.map(({ denom, amount }) => [denom, amount])
+          bank.map(({ denom, amount }) => [denom, amount]),
         );
 
         vbankAssets.forEach(([denom, info]) => {
@@ -151,7 +151,7 @@ export const watchWallet = async (chainStorageWatcher, address) => {
           (value) => {
             vbankAssets = value;
             possiblyUpdateBankPurses();
-          }
+          },
         );
       };
 
@@ -194,7 +194,7 @@ export const watchWallet = async (chainStorageWatcher, address) => {
           (value) => {
             agoricBrands = value;
             possiblyUpdateNonBankPurses();
-          }
+          },
         );
       };
 
@@ -210,10 +210,10 @@ export const watchWallet = async (chainStorageWatcher, address) => {
               const brands = purses.map((p) => p.brand);
               try {
                 const boardAux = await Promise.all(
-                  chainStorageWatcher.queryBoardAux(brands)
+                  chainStorageWatcher.queryBoardAux(brands),
                 );
                 brandToBoardAux = new Map(
-                  brands.map((brand, index) => [brand, boardAux[index]])
+                  brands.map((brand, index) => [brand, boardAux[index]]),
                 );
               } catch (e) {
                 console.error("Error getting boardAux for brands", brands, e);
@@ -222,7 +222,7 @@ export const watchWallet = async (chainStorageWatcher, address) => {
 
             nonBankPurses = purses;
             possiblyUpdateNonBankPurses();
-          }
+          },
         );
 
       void watchBrands();
