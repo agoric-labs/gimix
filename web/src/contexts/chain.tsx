@@ -11,6 +11,7 @@ import {
   WalletData,
 } from "../types/agoric";
 import { toast } from "react-toastify";
+import { createId } from "@paralleldrive/cuid2";
 
 interface ChainContext {
   assets: Array<unknown>;
@@ -37,7 +38,7 @@ export const ChainContextProvider = ({ children }: { children: ReactNode }) => {
   const stoppers = [];
   const { watcher, networkConfig } = useNetwork();
   const [currChainName, setCurrChainName] = useState<string | undefined>(
-    undefined
+    undefined,
   );
   const [instance, setInstance] = useState<unknown>(undefined);
   const [assets, setAssets] = useState<ChainContext["assets"]>([]);
@@ -50,11 +51,12 @@ export const ChainContextProvider = ({ children }: { children: ReactNode }) => {
   const [purses, setPurses] = useState([]);
   const [timerService, setTimerService] = useState(undefined);
   const [walletData, setWalletData] = useState<WalletData | undefined>(
-    undefined
+    undefined,
   );
   const [currentWalletData, setCurrentWalletData] = useState<
     CurrentWalletData | undefined
   >(undefined);
+  const [instanceWarningId] = useState<string>(createId());
 
   useEffect(() => {
     if (
@@ -90,7 +92,7 @@ export const ChainContextProvider = ({ children }: { children: ReactNode }) => {
   const watchPath = (
     kind: Kind,
     path: string,
-    handler: (args: unknown) => void
+    handler: (args: unknown) => void,
   ) => {
     if (!watcher) {
       console.error("watcher not initialized");
@@ -107,7 +109,7 @@ export const ChainContextProvider = ({ children }: { children: ReactNode }) => {
       watchPath(Kind.Data, "published.agoricNames.brand", (data) => {
         const formatted = (data as BrandData).reduce(
           (acc, [name, instance]) => ({ ...acc, [name]: instance }),
-          {}
+          {},
         );
         if (isEqual(formatted, brands)) return;
         setBrands(formatted);
@@ -131,12 +133,28 @@ export const ChainContextProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     if (watcher && !instance) {
       watchPath(Kind.Data, "published.agoricNames.instance", (data) => {
-        // todo object from entries refactor
-        console.log("instance data", data);
-        const instance = (data as InstanceData)
-          .find(([name]) => name === "GiMiX")
-          ?.at(1);
-        setInstance(instance);
+        const instance = Object.fromEntries(data as InstanceData[])["GiMiX"];
+        if (instance) {
+          setInstance(instance);
+          // removes instance not found toast if present
+          toast.update(instanceWarningId, {
+            render: "GiMiX instance found!",
+            type: "success",
+            isLoading: false,
+            autoClose: 3000,
+          });
+        } else {
+          // fires first time instance is not found
+          toast.warn(
+            `GiMiX instance not found on ${networkConfig?.chainName}. Please install or try a different network.`,
+            { toastId: instanceWarningId },
+          );
+          // updates existing toast if instance is not found on other chains
+          toast.update(instanceWarningId, {
+            render: `GiMiX instance not found on ${networkConfig?.chainName}. Please install or try a different network.`,
+            type: "warning",
+          });
+        }
       });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -154,13 +172,14 @@ export const ChainContextProvider = ({ children }: { children: ReactNode }) => {
           // const { offerToPublicSubscriberPaths } = data;
           console.log("published.wallet.current data", walletData);
           // TODO add purses to state we are interested in
-        }
+        },
       );
       watchPath(Kind.Data, `published.wallet.${walletAddress}`, (data) => {
         const walletData = data as WalletData;
         setWalletData(walletData);
         console.log("published.wallet data", data);
         // TODO this should only fire after a user submits an offer; not when they arrive at the page.
+        // Check against block height
         if (
           walletData?.status?.invitationSpec?.publicInvitationMaker ===
           "makeWorkAgreementInvitation"
@@ -192,9 +211,10 @@ export const ChainContextProvider = ({ children }: { children: ReactNode }) => {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [watcher]);
+  
   console.log("currentWalletData", currentWalletData);
   console.log("walletData", walletData);
-  console.log({ brands, purses });
+
   return (
     <ChainContext.Provider
       value={{
